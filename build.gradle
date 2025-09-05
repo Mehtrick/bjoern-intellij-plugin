@@ -18,15 +18,13 @@ intellij {
     plugins = ['yaml']
 }
 
-tasks {
-    // Set the JVM compatibility versions
-    withType(JavaCompile) {
-        sourceCompatibility = "11"
-        targetCompatibility = "11"
-    }
+// Set the JVM compatibility versions
+tasks.withType(JavaCompile) {
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+}
 
-    patchPluginXml {
-        sinceBuild = '223'
-        untilBuild = '232.*'
-    }
+tasks.patchPluginXml {
+    sinceBuild = '223'
+    untilBuild = '232.*'
 }
