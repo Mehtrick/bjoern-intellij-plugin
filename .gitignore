@@ -12,6 +12,9 @@ gradle-app.setting
 *.iws
 out/
 
+# IntelliJ Platform cache
+.intellijPlatform
+
 # Eclipse
 .project
 .metadata

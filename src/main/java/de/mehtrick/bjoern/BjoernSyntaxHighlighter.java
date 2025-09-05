@@ -28,8 +28,9 @@ public class BjoernSyntaxHighlighter extends SyntaxHighlighterBase {
     public static final TextAttributesKey YAML_SCALAR_KEY =
             createTextAttributesKey("YAML_SCALAR_KEY", DefaultLanguageHighlighterColors.INSTANCE_FIELD);
     
+    // Normal text with subtle coloring (default identifier color which adapts to theme)
     public static final TextAttributesKey YAML_SCALAR_VALUE =
-            createTextAttributesKey("YAML_SCALAR_VALUE", DefaultLanguageHighlighterColors.STRING);
+            createTextAttributesKey("YAML_SCALAR_VALUE", DefaultLanguageHighlighterColors.IDENTIFIER);
     
     // Enhanced attribute for variables (double-quoted strings) - more vibrant color
     public static final TextAttributesKey BJOERN_VARIABLE =

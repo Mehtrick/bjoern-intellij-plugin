@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij' version '1.16.1'
+    id 'org.jetbrains.intellij.platform' version '2.1.0'
 }
 
 group = 'de.mehtrick'
@@ -8,14 +8,20 @@ version = '1.0.0'
 
 repositories {
     mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
 }
 
-// Configure Gradle IntelliJ Plugin
-intellij {
-    version = '2022.3.3'
-    type = 'IC' // Target IDE Platform
-    
-    plugins = ['yaml']
+dependencies {
+    intellijPlatform {
+        intellijIdeaCommunity("2023.3.7")
+        bundledPlugin("org.jetbrains.plugins.yaml")
+        
+        pluginVerifier()
+        zipSigner()
+        instrumentationTools()
+    }
 }
 
 // Set the JVM compatibility versions
@@ -24,7 +30,11 @@ tasks.withType(JavaCompile) {
     targetCompatibility = "17"
 }
 
-tasks.patchPluginXml {
-    sinceBuild = '223'
-    untilBuild = '232.*'
+intellijPlatform {
+    pluginConfiguration {
+        ideaVersion {
+            sinceBuild = "233"
+            untilBuild = "243.*"
+        }
+    }
 }
