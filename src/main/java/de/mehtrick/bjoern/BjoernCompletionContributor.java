@@ -23,23 +23,7 @@ public class BjoernCompletionContributor extends CompletionContributor {
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\"[^\"]*\"");
 
     public BjoernCompletionContributor() {
-        // Complete BDD keywords at the beginning of lines
-        extend(CompletionType.BASIC,
-                PlatformPatterns.psiElement(YAMLTokenTypes.SCALAR_KEY),
-                new CompletionProvider<CompletionParameters>() {
-                    @Override
-                    protected void addCompletions(@NotNull CompletionParameters parameters,
-                                                  @NotNull ProcessingContext context,
-                                                  @NotNull CompletionResultSet result) {
-                        for (String keyword : BDD_KEYWORDS) {
-                            result.addElement(LookupElementBuilder.create(keyword)
-                                    .withBoldness(true)
-                                    .withTypeText("BDD Keyword"));
-                        }
-                    }
-                });
-        
-        // Smart completion for BDD statement suggestions based on current file content
+        // Universal completion provider that handles all completion scenarios
         extend(CompletionType.BASIC,
                 PlatformPatterns.psiElement(),
                 new CompletionProvider<CompletionParameters>() {
@@ -54,13 +38,26 @@ public class BjoernCompletionContributor extends CompletionContributor {
                         
                         PsiElement element = parameters.getPosition();
                         String currentContext = getCurrentBDDContext(element);
+                        String text = parameters.getEditor().getDocument().getText();
+                        int offset = parameters.getOffset();
                         
+                        // Always provide BDD keyword completions
+                        boolean shouldShowKeywords = shouldShowKeywordCompletion(text, offset);
+                        if (shouldShowKeywords) {
+                            for (String keyword : BDD_KEYWORDS) {
+                                result.addElement(LookupElementBuilder.create(keyword)
+                                        .withBoldness(true)
+                                        .withTypeText("BDD Keyword"));
+                            }
+                        }
+                        
+                        // Provide smart completion based on context
                         if (currentContext != null) {
-                            // Extract existing statements of the same type from the file
                             Set<String> suggestions = extractStatementsFromFile(parameters.getOriginalFile(), currentContext);
                             
                             for (String suggestion : suggestions) {
-                                result.addElement(LookupElementBuilder.create("- " + suggestion)
+                                String lookupText = isUnderListItem(text, offset) ? suggestion : "- " + suggestion;
+                                result.addElement(LookupElementBuilder.create(lookupText)
                                         .withTypeText(currentContext + " suggestion")
                                         .withInsertHandler((context1, item) -> {
                                             // Place cursor at first variable placeholder if any
@@ -73,23 +70,32 @@ public class BjoernCompletionContributor extends CompletionContributor {
                                         }));
                             }
                         }
-                        
-                        // Also provide keyword completions when appropriate
-                        String text = parameters.getEditor().getDocument().getText();
-                        int offset = parameters.getOffset();
-                        
-                        // Check if we're at the beginning of a line or after whitespace
-                        boolean isLineStart = offset == 0 || text.charAt(offset - 1) == '\n';
-                        
-                        if (isLineStart || (offset > 0 && Character.isWhitespace(text.charAt(offset - 1)))) {
-                            for (String keyword : BDD_KEYWORDS) {
-                                result.addElement(LookupElementBuilder.create(keyword)
-                                        .withBoldness(true)
-                                        .withTypeText("BDD Keyword"));
-                            }
-                        }
                     }
                 });
+    }
+    
+    
+    private boolean shouldShowKeywordCompletion(String text, int offset) {
+        // Show keyword completion at beginning of line or after whitespace
+        if (offset == 0) return true;
+        if (offset > 0 && text.charAt(offset - 1) == '\n') return true;
+        
+        // Check if we're after whitespace that suggests we want a keyword
+        if (offset > 0 && Character.isWhitespace(text.charAt(offset - 1))) {
+            // Look back to see if we're at an appropriate indentation level for keywords
+            int lineStart = text.lastIndexOf('\n', offset - 1) + 1;
+            String linePrefix = text.substring(lineStart, offset).trim();
+            return linePrefix.isEmpty(); // Empty line prefix suggests keyword completion
+        }
+        
+        return false;
+    }
+    
+    private boolean isUnderListItem(String text, int offset) {
+        // Check if we're already under a list item (starts with -)
+        int lineStart = text.lastIndexOf('\n', offset) + 1;
+        String currentLine = text.substring(lineStart, Math.min(offset, text.length()));
+        return currentLine.trim().startsWith("-");
     }
     
     private String getCurrentBDDContext(PsiElement element) {

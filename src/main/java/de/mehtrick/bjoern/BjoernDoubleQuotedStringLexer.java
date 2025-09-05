@@ -61,6 +61,12 @@ public class BjoernDoubleQuotedStringLexer extends LexerBase {
                 currentTokenType = BjoernTokenTypes.DOUBLE_QUOTED_STRING;
                 currentPosition = currentTokenEnd;
                 return;
+            } else {
+                // Unmatched quote - treat as regular text and skip over it
+                currentTokenEnd = currentPosition + 1;
+                currentTokenType = YAMLTokenTypes.TEXT;
+                currentPosition = currentTokenEnd;
+                return;
             }
         }
         
