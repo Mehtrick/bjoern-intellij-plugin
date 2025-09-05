@@ -27,6 +27,16 @@ public class BjoernSyntaxHighlighterTest extends BasePlatformTestCase {
         assertEquals("Should highlight as Bjoern variable", BjoernSyntaxHighlighter.BJOERN_VARIABLE, keys[0]);
     }
 
+    public void testCustomDoubleQuotedStringHighlighting() {
+        BjoernSyntaxHighlighter highlighter = new BjoernSyntaxHighlighter();
+        
+        // Test that our custom DOUBLE_QUOTED_STRING tokens are highlighted as variables
+        TextAttributesKey[] keys = highlighter.getTokenHighlights(BjoernTokenTypes.DOUBLE_QUOTED_STRING);
+        assertNotNull("Should return highlighting for DOUBLE_QUOTED_STRING", keys);
+        assertEquals("Should have one highlighting key", 1, keys.length);
+        assertEquals("Should highlight as Bjoern variable", BjoernSyntaxHighlighter.BJOERN_VARIABLE, keys[0]);
+    }
+
     public void testRegularStringHighlighting() {
         BjoernSyntaxHighlighter highlighter = new BjoernSyntaxHighlighter();
         

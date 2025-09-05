@@ -7,7 +7,6 @@ import com.intellij.openapi.fileTypes.SyntaxHighlighterBase;
 import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.yaml.YAMLTokenTypes;
-import org.jetbrains.yaml.lexer.YAMLFlexLexer;
 
 import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey;
 
@@ -33,7 +32,8 @@ public class BjoernSyntaxHighlighter extends SyntaxHighlighterBase {
 
     @Override
     public @NotNull Lexer getHighlightingLexer() {
-        return new YAMLFlexLexer();
+        // Use custom lexer that can handle double-quoted strings in text content
+        return new BjoernLayeredLexer();
     }
 
     @Override
@@ -45,7 +45,11 @@ public class BjoernSyntaxHighlighter extends SyntaxHighlighterBase {
         // Handle double-quoted strings as variables
         else if (tokenType == YAMLTokenTypes.SCALAR_DSTRING) {
             return VARIABLE_KEYS;
-        } 
+        }
+        // Handle our custom double-quoted token as variables
+        else if (tokenType == BjoernTokenTypes.DOUBLE_QUOTED_STRING) {
+            return VARIABLE_KEYS;
+        }
         // Handle other string types as regular values
         else if (tokenType == YAMLTokenTypes.SCALAR_STRING) {
             return SCALAR_VALUE_KEYS;

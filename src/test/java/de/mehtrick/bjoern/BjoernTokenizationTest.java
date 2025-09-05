@@ -1,0 +1,89 @@
+package de.mehtrick.bjoern;
+
+import com.intellij.lexer.Lexer;
+import com.intellij.psi.tree.IElementType;
+import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.jetbrains.yaml.YAMLTokenTypes;
+
+public class BjoernTokenizationTest extends BasePlatformTestCase {
+
+    public void testLayeredLexerDoubleQuotedStrings() {
+        // Test if the new layered lexer correctly identifies double-quoted strings
+        String testContent = "Given:\n  - A user with username \"john.doe\"\n  - Password is \"securePassword123\"";
+        
+        Lexer lexer = new BjoernLayeredLexer();
+        lexer.start(testContent);
+        
+        System.out.println("Testing layered lexer with: " + testContent);
+        
+        int doubleQuotedCount = 0;
+        
+        while (lexer.getTokenType() != null) {
+            IElementType tokenType = lexer.getTokenType();
+            String tokenText = lexer.getTokenText();
+            
+            System.out.println("Token: " + tokenType + " = '" + tokenText + "'");
+            
+            // Check if we find our custom DOUBLE_QUOTED_STRING tokens
+            if (tokenType == BjoernTokenTypes.DOUBLE_QUOTED_STRING) {
+                System.out.println("  *** FOUND CUSTOM DOUBLE-QUOTED STRING: " + tokenText);
+                doubleQuotedCount++;
+            }
+            
+            lexer.advance();
+        }
+        
+        // We should find 2 double-quoted strings: "john.doe" and "securePassword123"
+        assertTrue("Should find at least 2 double-quoted strings", doubleQuotedCount >= 2);
+    }
+
+    public void testDoubleQuotedStringTokenization() {
+        // Test if YAML lexer correctly tokenizes double-quoted strings
+        String testContent = "Given:\n  - A user with username \"john.doe\"\n  - Password is \"securePassword123\"";
+        
+        Lexer lexer = new BjoernLayeredLexer();
+        lexer.start(testContent);
+        
+        System.out.println("Tokenizing: " + testContent);
+        
+        while (lexer.getTokenType() != null) {
+            IElementType tokenType = lexer.getTokenType();
+            String tokenText = lexer.getTokenText();
+            
+            System.out.println("Token: " + tokenType + " = '" + tokenText + "'");
+            
+            // Check if we find SCALAR_DSTRING tokens
+            if (tokenType == YAMLTokenTypes.SCALAR_DSTRING) {
+                System.out.println("  *** FOUND DOUBLE-QUOTED STRING: " + tokenText);
+            }
+            
+            lexer.advance();
+        }
+    }
+    
+    public void testVariousStringTypes() {
+        // Test different string formats
+        String[] testCases = {
+            "\"double quoted\"",
+            "'single quoted'", 
+            "unquoted text",
+            "key: \"value\"",
+            "- item: \"double quoted value\""
+        };
+        
+        for (String testCase : testCases) {
+            System.out.println("\n--- Testing: " + testCase + " ---");
+            
+            Lexer lexer = new BjoernLayeredLexer();
+            lexer.start(testCase);
+            
+            while (lexer.getTokenType() != null) {
+                IElementType tokenType = lexer.getTokenType();
+                String tokenText = lexer.getTokenText();
+                
+                System.out.println("  " + tokenType + " = '" + tokenText + "'");
+                lexer.advance();
+            }
+        }
+    }
+}
