@@ -1,0 +1,39 @@
+<idea-plugin>
+    <id>de.mehtrick.bjoern-intellij-plugin</id>
+    <name>Bjoern Language Support</name>
+    <vendor email="support@mehtrick.de" url="https://github.com/Mehtrick">Mehtrick</vendor>
+
+    <description><![CDATA[
+    IntelliJ IDEA plugin for Bjoern BDD specification language support.
+    
+    Features:
+    - Syntax highlighting for .zgr files
+    - BDD keyword highlighting (Feature, Background, Given, When, Then, Scenario, Scenarios)
+    - YAML structure validation
+    - File type recognition for .zgr files
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.plugins.yaml</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- File Type -->
+        <fileType name="Bjoern File" 
+                  implementationClass="de.mehtrick.bjoern.BjoernFileType" 
+                  fieldName="INSTANCE" 
+                  language="Bjoern" 
+                  extensions="zgr"/>
+        
+        <!-- Language -->
+        <lang.parserDefinition language="Bjoern"
+                              implementationClass="de.mehtrick.bjoern.BjoernParserDefinition"/>
+        
+        <!-- Syntax Highlighter -->
+        <lang.syntaxHighlighterFactory language="Bjoern"
+                                      implementationClass="de.mehtrick.bjoern.BjoernSyntaxHighlighterFactory"/>
+    </extensions>
+
+    <actions>
+        <!-- Add actions here -->
+    </actions>
+</idea-plugin>
