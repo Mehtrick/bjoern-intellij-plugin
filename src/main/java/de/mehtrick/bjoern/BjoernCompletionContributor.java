@@ -4,40 +4,23 @@ import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.yaml.YAMLTokenTypes;
+import org.jetbrains.yaml.psi.*;
 
-import java.util.List;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class BjoernCompletionContributor extends CompletionContributor {
     private static final List<String> BDD_KEYWORDS = List.of(
             "Feature:", "Background:", "Given:", "When:", "Then:", "Scenario:", "Scenarios:"
     );
     
-    private static final List<String> GIVEN_SUGGESTIONS = List.of(
-            "A user with username",
-            "A system with",
-            "An empty database",
-            "A registered user",
-            "Configuration is set to"
-    );
-    
-    private static final List<String> WHEN_SUGGESTIONS = List.of(
-            "User attempts to login",
-            "User clicks on",
-            "System processes",
-            "Request is sent to",
-            "User navigates to"
-    );
-    
-    private static final List<String> THEN_SUGGESTIONS = List.of(
-            "Login should be successful",
-            "User should be redirected to",
-            "System should display",
-            "Response should contain",
-            "Error message should appear"
-    );
+    private static final Pattern VARIABLE_PATTERN = Pattern.compile("\"[^\"]*\"");
 
     public BjoernCompletionContributor() {
         // Complete BDD keywords at the beginning of lines
@@ -56,7 +39,7 @@ public class BjoernCompletionContributor extends CompletionContributor {
                     }
                 });
         
-        // Also support completion in text areas and for partial text
+        // Smart completion for BDD statement suggestions based on current file content
         extend(CompletionType.BASIC,
                 PlatformPatterns.psiElement(),
                 new CompletionProvider<CompletionParameters>() {
@@ -64,71 +47,118 @@ public class BjoernCompletionContributor extends CompletionContributor {
                     protected void addCompletions(@NotNull CompletionParameters parameters,
                                                   @NotNull ProcessingContext context,
                                                   @NotNull CompletionResultSet result) {
-                        // Only provide keyword completions in Bjoern files
-                        if (parameters.getOriginalFile() instanceof BjoernFile) {
-                            String text = parameters.getEditor().getDocument().getText();
-                            int offset = parameters.getOffset();
+                        // Only provide completions in Bjoern files
+                        if (!(parameters.getOriginalFile() instanceof BjoernFile)) {
+                            return;
+                        }
+                        
+                        PsiElement element = parameters.getPosition();
+                        String currentContext = getCurrentBDDContext(element);
+                        
+                        if (currentContext != null) {
+                            // Extract existing statements of the same type from the file
+                            Set<String> suggestions = extractStatementsFromFile(parameters.getOriginalFile(), currentContext);
                             
-                            // Check if we're at the beginning of a line or after whitespace
-                            boolean isLineStart = offset == 0 || text.charAt(offset - 1) == '\n';
-                            
-                            if (isLineStart || (offset > 0 && Character.isWhitespace(text.charAt(offset - 1)))) {
-                                for (String keyword : BDD_KEYWORDS) {
-                                    result.addElement(LookupElementBuilder.create(keyword)
-                                            .withBoldness(true)
-                                            .withTypeText("BDD Keyword"));
-                                }
+                            for (String suggestion : suggestions) {
+                                result.addElement(LookupElementBuilder.create("- " + suggestion)
+                                        .withTypeText(currentContext + " suggestion")
+                                        .withInsertHandler((context1, item) -> {
+                                            // Place cursor at first variable placeholder if any
+                                            int caretOffset = context1.getEditor().getCaretModel().getOffset();
+                                            String insertedText = item.getLookupString();
+                                            int firstQuote = insertedText.indexOf("\"\"");
+                                            if (firstQuote != -1) {
+                                                context1.getEditor().getCaretModel().moveToOffset(caretOffset - insertedText.length() + firstQuote + 1);
+                                            }
+                                        }));
+                            }
+                        }
+                        
+                        // Also provide keyword completions when appropriate
+                        String text = parameters.getEditor().getDocument().getText();
+                        int offset = parameters.getOffset();
+                        
+                        // Check if we're at the beginning of a line or after whitespace
+                        boolean isLineStart = offset == 0 || text.charAt(offset - 1) == '\n';
+                        
+                        if (isLineStart || (offset > 0 && Character.isWhitespace(text.charAt(offset - 1)))) {
+                            for (String keyword : BDD_KEYWORDS) {
+                                result.addElement(LookupElementBuilder.create(keyword)
+                                        .withBoldness(true)
+                                        .withTypeText("BDD Keyword"));
                             }
                         }
                     }
                 });
+    }
+    
+    private String getCurrentBDDContext(PsiElement element) {
+        // Walk up the PSI tree to find the current BDD context (Given, When, Then)
+        YAMLKeyValue currentKeyValue = PsiTreeUtil.getParentOfType(element, YAMLKeyValue.class);
         
-        // Complete Given statements
-        extend(CompletionType.BASIC,
-                PlatformPatterns.psiElement()
-                        .afterLeaf(PlatformPatterns.psiElement().withText("Given:")),
-                new CompletionProvider<CompletionParameters>() {
-                    @Override
-                    protected void addCompletions(@NotNull CompletionParameters parameters,
-                                                  @NotNull ProcessingContext context,
-                                                  @NotNull CompletionResultSet result) {
-                        for (String suggestion : GIVEN_SUGGESTIONS) {
-                            result.addElement(LookupElementBuilder.create("- " + suggestion)
-                                    .withTypeText("Given suggestion"));
-                        }
-                    }
-                });
+        while (currentKeyValue != null) {
+            String keyText = currentKeyValue.getKeyText();
+            if (keyText.equals("Given") || keyText.equals("When") || keyText.equals("Then")) {
+                return keyText;
+            }
+            currentKeyValue = PsiTreeUtil.getParentOfType(currentKeyValue, YAMLKeyValue.class);
+        }
         
-        // Complete When statements
-        extend(CompletionType.BASIC,
-                PlatformPatterns.psiElement()
-                        .afterLeaf(PlatformPatterns.psiElement().withText("When:")),
-                new CompletionProvider<CompletionParameters>() {
-                    @Override
-                    protected void addCompletions(@NotNull CompletionParameters parameters,
-                                                  @NotNull ProcessingContext context,
-                                                  @NotNull CompletionResultSet result) {
-                        for (String suggestion : WHEN_SUGGESTIONS) {
-                            result.addElement(LookupElementBuilder.create("- " + suggestion)
-                                    .withTypeText("When suggestion"));
-                        }
-                    }
-                });
+        // Alternative approach: analyze the text context
+        return getCurrentBDDContextFromText(element);
+    }
+    
+    private String getCurrentBDDContextFromText(PsiElement element) {
+        PsiFile file = element.getContainingFile();
+        String text = file.getText();
+        int offset = element.getTextOffset();
         
-        // Complete Then statements
-        extend(CompletionType.BASIC,
-                PlatformPatterns.psiElement()
-                        .afterLeaf(PlatformPatterns.psiElement().withText("Then:")),
-                new CompletionProvider<CompletionParameters>() {
-                    @Override
-                    protected void addCompletions(@NotNull CompletionParameters parameters,
-                                                  @NotNull ProcessingContext context,
-                                                  @NotNull CompletionResultSet result) {
-                        for (String suggestion : THEN_SUGGESTIONS) {
-                            result.addElement(LookupElementBuilder.create("- " + suggestion)
-                                    .withTypeText("Then suggestion"));
-                        }
-                    }
-                });
+        // Look backwards from the current position to find the nearest BDD keyword
+        String[] lines = text.substring(0, offset).split("\n");
+        
+        for (int i = lines.length - 1; i >= 0; i--) {
+            String line = lines[i].trim();
+            if (line.startsWith("Given:")) {
+                return "Given";
+            } else if (line.startsWith("When:")) {
+                return "When";
+            } else if (line.startsWith("Then:")) {
+                return "Then";
+            }
+        }
+        
+        return null;
+    }
+    
+    private Set<String> extractStatementsFromFile(PsiFile file, String contextType) {
+        Set<String> statements = new LinkedHashSet<>();
+        String text = file.getText();
+        
+        // Pattern to match statements under the specified context
+        Pattern sectionPattern = Pattern.compile(
+            contextType + ":\\s*\n((?:\\s*-\\s*[^\n]+\n)*)", 
+            Pattern.MULTILINE
+        );
+        
+        Matcher sectionMatcher = sectionPattern.matcher(text);
+        
+        while (sectionMatcher.find()) {
+            String section = sectionMatcher.group(1);
+            
+            // Extract individual list items
+            Pattern itemPattern = Pattern.compile("^\\s*-\\s*(.+)$", Pattern.MULTILINE);
+            Matcher itemMatcher = itemPattern.matcher(section);
+            
+            while (itemMatcher.find()) {
+                String statement = itemMatcher.group(1).trim();
+                
+                // Replace quoted variables with empty placeholders
+                String templateStatement = VARIABLE_PATTERN.matcher(statement).replaceAll("\"\"");
+                
+                statements.add(templateStatement);
+            }
+        }
+        
+        return statements;
     }
 }

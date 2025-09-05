@@ -1,0 +1,30 @@
+Feature: Test Foo
+Background:
+  Given: 
+    - A Foo
+    - A Bar
+Scenarios: 
+  - Scenario: Foo is not häppy
+    Given: 
+      - there are "2" bottles of wine
+      - there are "0" bottles of beer
+    When:
+      - Foo wants to drink "1" bottle of beer
+    Then:
+      - Foo says "why is my beer empty"
+  - Scenario: Getraenk vorhanden
+    Given: 
+      - there are "2" bottles of wine
+      - there are "1" bottles of beer
+    When:
+      - Foo wants to drink "1" bottle of beer
+    Then:
+      - response should contain "success"
+      
+# When typing under a Given statement, you should now get suggestions like:
+# - there are "" bottles of wine
+# - there are "" bottles of beer
+# - A Foo
+# - A Bar
+
+# The completion system extracts patterns from existing statements and replaces variables with empty quotes

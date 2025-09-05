@@ -4,7 +4,7 @@ An IntelliJ IDEA plugin for [Bjoern](https://github.com/Mehtrick/bjoern) BDD spe
 
 ## Features
 
-- **File Type Recognition**: Recognizes `.zgr` files as Bjoern specification files with custom guitar icon
+- **File Type Recognition**: Recognizes `.zgr` files as Bjoern specification files with custom teal gem icon
 - **Syntax Highlighting**: Highlights BDD keywords in Bjoern files:
   - `Feature:`
   - `Background:`
@@ -13,7 +13,13 @@ An IntelliJ IDEA plugin for [Bjoern](https://github.com/Mehtrick/bjoern) BDD spe
   - `Then:`
   - `Scenario:`
   - `Scenarios:`
-- **Variable Highlighting**: Double-quoted strings are highlighted as variables (e.g., `"john.doe"`, `"123"`)
+- **Keyword Validation**: Only valid BDD keywords are highlighted; others are marked as invalid
+- **Variable Highlighting**: Double-quoted strings are highlighted as variables with vibrant colors (e.g., `"john.doe"`, `"123"`)
+- **Auto-indentation**: Proper YAML-based indentation support
+- **Smart Autocomplete**: Intelligent code completion with context-aware suggestions:
+  - BDD keyword completion
+  - Dynamic statement suggestions based on existing file content
+  - Variable placeholders (variables in quotes are replaced with `""` for easy editing)
 - **YAML Structure Support**: Based on YAML parsing for proper structure validation
 - **IntelliJ Integration**: Seamless integration with IntelliJ IDEA and other JetBrains IDEs
 
@@ -43,6 +49,16 @@ Scenarios:
 
 Variables in double quotes like `"john.doe"` and `"securePassword123"` are highlighted differently to distinguish them from regular text.
 
+### Smart Autocomplete
+
+The plugin provides intelligent code completion:
+
+1. **BDD Keywords**: Type keywords like `Given:`, `When:`, `Then:` for quick insertion
+2. **Dynamic Statement Suggestions**: When typing under a BDD section, get suggestions based on existing statements in the same file
+3. **Variable Placeholders**: Suggestions automatically replace variables with empty quotes (`""`) for easy editing
+
+Example: In a file with `- there are "2" bottles of wine`, typing under a `Given:` section will suggest `- there are "" bottles of wine` with the cursor positioned inside the quotes.
+
 ## Installation
 
 1. Build the plugin using Gradle:
@@ -62,6 +78,8 @@ The `examples/` directory contains sample `.zgr` files demonstrating the Bjoern 
 - `kassenAutomat.zgr` - Vending machine test example
 - `userLogin.zgr` - User authentication test example  
 - `variableHighlighting.zgr` - Example showing variable highlighting features
+- `enhancedFeatures.zgr` - Demonstrates keyword validation and enhanced features
+- `completionDemo.zgr` - Shows smart autocomplete functionality
 
 ## Development
 
@@ -74,14 +92,19 @@ The `examples/` directory contains sample `.zgr` files demonstrating the Bjoern 
 ### Testing
 
 Create `.zgr` files and verify that:
-1. They are recognized as Bjoern files
+1. They are recognized as Bjoern files with teal gem icon
 2. BDD keywords are highlighted properly
-3. YAML structure is validated
+3. Invalid keywords are marked as errors
+4. Variables in double quotes are highlighted with vibrant colors
+5. Auto-indentation works correctly
+6. Smart autocomplete provides relevant suggestions
+7. YAML structure is validated
 
 ## Requirements
 
-- IntelliJ IDEA 2022.3 or later
-- Java 11 or later
+- IntelliJ IDEA 2022.3 or later (recommended: 2023.3.7 or later)
+- Java 17 or later
+- Gradle 8.10.2 (included via wrapper)
 
 ## License
 
