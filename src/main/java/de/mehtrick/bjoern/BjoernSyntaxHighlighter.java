@@ -25,12 +25,12 @@ public class BjoernSyntaxHighlighter extends SyntaxHighlighterBase {
     public static final TextAttributesKey BJOERN_INVALID_KEYWORD =
             createTextAttributesKey("BJOERN_INVALID_KEYWORD", DefaultLanguageHighlighterColors.INVALID_STRING_ESCAPE);
     
-    public static final TextAttributesKey YAML_SCALAR_KEY =
-            createTextAttributesKey("YAML_SCALAR_KEY", DefaultLanguageHighlighterColors.INSTANCE_FIELD);
+    public static final TextAttributesKey BJOERN_SCALAR_KEY =
+            createTextAttributesKey("BJOERN_SCALAR_KEY", DefaultLanguageHighlighterColors.INSTANCE_FIELD);
     
     // Normal text with subtle coloring (default identifier color which adapts to theme)
-    public static final TextAttributesKey YAML_SCALAR_VALUE =
-            createTextAttributesKey("YAML_SCALAR_VALUE", DefaultLanguageHighlighterColors.IDENTIFIER);
+    public static final TextAttributesKey BJOERN_SCALAR_VALUE =
+            createTextAttributesKey("BJOERN_SCALAR_VALUE", DefaultLanguageHighlighterColors.IDENTIFIER);
     
     // Enhanced attribute for variables (double-quoted strings) - more vibrant color
     public static final TextAttributesKey BJOERN_VARIABLE =
@@ -38,8 +38,8 @@ public class BjoernSyntaxHighlighter extends SyntaxHighlighterBase {
 
     private static final TextAttributesKey[] KEYWORD_KEYS = new TextAttributesKey[]{BJOERN_KEYWORD};
     private static final TextAttributesKey[] INVALID_KEYWORD_KEYS = new TextAttributesKey[]{BJOERN_INVALID_KEYWORD};
-    private static final TextAttributesKey[] SCALAR_KEY_KEYS = new TextAttributesKey[]{YAML_SCALAR_KEY};
-    private static final TextAttributesKey[] SCALAR_VALUE_KEYS = new TextAttributesKey[]{YAML_SCALAR_VALUE};
+    private static final TextAttributesKey[] SCALAR_KEY_KEYS = new TextAttributesKey[]{BJOERN_SCALAR_KEY};
+    private static final TextAttributesKey[] SCALAR_VALUE_KEYS = new TextAttributesKey[]{BJOERN_SCALAR_VALUE};
     private static final TextAttributesKey[] VARIABLE_KEYS = new TextAttributesKey[]{BJOERN_VARIABLE};
     private static final TextAttributesKey[] EMPTY_KEYS = new TextAttributesKey[0];
 
