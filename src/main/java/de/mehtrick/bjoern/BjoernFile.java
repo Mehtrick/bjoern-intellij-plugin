@@ -1,13 +1,13 @@
 package de.mehtrick.bjoern;
 
-import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.psi.FileViewProvider;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.yaml.psi.impl.YAMLFileImpl;
 
-public class BjoernFile extends PsiFileBase {
+public class BjoernFile extends YAMLFileImpl {
     public BjoernFile(@NotNull FileViewProvider viewProvider) {
-        super(viewProvider, BjoernLanguage.INSTANCE);
+        super(viewProvider);
     }
 
     @NotNull

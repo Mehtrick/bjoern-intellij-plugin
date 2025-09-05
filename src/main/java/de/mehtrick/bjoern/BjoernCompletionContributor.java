@@ -56,6 +56,33 @@ public class BjoernCompletionContributor extends CompletionContributor {
                     }
                 });
         
+        // Also support completion in text areas and for partial text
+        extend(CompletionType.BASIC,
+                PlatformPatterns.psiElement(),
+                new CompletionProvider<CompletionParameters>() {
+                    @Override
+                    protected void addCompletions(@NotNull CompletionParameters parameters,
+                                                  @NotNull ProcessingContext context,
+                                                  @NotNull CompletionResultSet result) {
+                        // Only provide keyword completions in Bjoern files
+                        if (parameters.getOriginalFile() instanceof BjoernFile) {
+                            String text = parameters.getEditor().getDocument().getText();
+                            int offset = parameters.getOffset();
+                            
+                            // Check if we're at the beginning of a line or after whitespace
+                            boolean isLineStart = offset == 0 || text.charAt(offset - 1) == '\n';
+                            
+                            if (isLineStart || (offset > 0 && Character.isWhitespace(text.charAt(offset - 1)))) {
+                                for (String keyword : BDD_KEYWORDS) {
+                                    result.addElement(LookupElementBuilder.create(keyword)
+                                            .withBoldness(true)
+                                            .withTypeText("BDD Keyword"));
+                                }
+                            }
+                        }
+                    }
+                });
+        
         // Complete Given statements
         extend(CompletionType.BASIC,
                 PlatformPatterns.psiElement()
