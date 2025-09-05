@@ -4,7 +4,7 @@ An IntelliJ IDEA plugin for [Bjoern](https://github.com/Mehtrick/bjoern) BDD spe
 
 ## Features
 
-- **File Type Recognition**: Recognizes `.zgr` files as Bjoern specification files
+- **File Type Recognition**: Recognizes `.zgr` files as Bjoern specification files with custom guitar icon
 - **Syntax Highlighting**: Highlights BDD keywords in Bjoern files:
   - `Feature:`
   - `Background:`
@@ -13,6 +13,7 @@ An IntelliJ IDEA plugin for [Bjoern](https://github.com/Mehtrick/bjoern) BDD spe
   - `Then:`
   - `Scenario:`
   - `Scenarios:`
+- **Variable Highlighting**: Double-quoted strings are highlighted as variables (e.g., `"john.doe"`, `"123"`)
 - **YAML Structure Support**: Based on YAML parsing for proper structure validation
 - **IntelliJ Integration**: Seamless integration with IntelliJ IDEA and other JetBrains IDEs
 
@@ -32,12 +33,15 @@ Background:
 Scenarios:
   - Scenario: Test case name
     Given:
-      - Precondition step
+      - A user with username "john.doe"
+      - Password is "securePassword123"
     When:
-      - Action step
+      - User logs in with "john.doe"
     Then:
-      - Verification step
+      - Login should display "Welcome!"
 ```
+
+Variables in double quotes like `"john.doe"` and `"securePassword123"` are highlighted differently to distinguish them from regular text.
 
 ## Installation
 
@@ -56,7 +60,8 @@ Scenarios:
 The `examples/` directory contains sample `.zgr` files demonstrating the Bjoern language syntax:
 
 - `kassenAutomat.zgr` - Vending machine test example
-- `userLogin.zgr` - User authentication test example
+- `userLogin.zgr` - User authentication test example  
+- `variableHighlighting.zgr` - Example showing variable highlighting features
 
 ## Development
 

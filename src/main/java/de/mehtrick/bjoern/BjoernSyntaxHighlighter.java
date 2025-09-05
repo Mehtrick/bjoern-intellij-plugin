@@ -20,10 +20,15 @@ public class BjoernSyntaxHighlighter extends SyntaxHighlighterBase {
     
     public static final TextAttributesKey YAML_SCALAR_VALUE =
             createTextAttributesKey("YAML_SCALAR_VALUE", DefaultLanguageHighlighterColors.STRING);
+    
+    // New attribute for variables (double-quoted strings)
+    public static final TextAttributesKey BJOERN_VARIABLE =
+            createTextAttributesKey("BJOERN_VARIABLE", DefaultLanguageHighlighterColors.PARAMETER);
 
     private static final TextAttributesKey[] KEYWORD_KEYS = new TextAttributesKey[]{BJOERN_KEYWORD};
     private static final TextAttributesKey[] SCALAR_KEY_KEYS = new TextAttributesKey[]{YAML_SCALAR_KEY};
     private static final TextAttributesKey[] SCALAR_VALUE_KEYS = new TextAttributesKey[]{YAML_SCALAR_VALUE};
+    private static final TextAttributesKey[] VARIABLE_KEYS = new TextAttributesKey[]{BJOERN_VARIABLE};
     private static final TextAttributesKey[] EMPTY_KEYS = new TextAttributesKey[0];
 
     @Override
@@ -36,9 +41,16 @@ public class BjoernSyntaxHighlighter extends SyntaxHighlighterBase {
         // Handle BDD keywords as special keys
         if (tokenType == YAMLTokenTypes.SCALAR_KEY) {
             return KEYWORD_KEYS;
-        } else if (tokenType == YAMLTokenTypes.SCALAR_STRING || tokenType == YAMLTokenTypes.SCALAR_DSTRING) {
+        } 
+        // Handle double-quoted strings as variables
+        else if (tokenType == YAMLTokenTypes.SCALAR_DSTRING) {
+            return VARIABLE_KEYS;
+        } 
+        // Handle other string types as regular values
+        else if (tokenType == YAMLTokenTypes.SCALAR_STRING) {
             return SCALAR_VALUE_KEYS;
-        } else if (tokenType == YAMLTokenTypes.TEXT) {
+        } 
+        else if (tokenType == YAMLTokenTypes.TEXT) {
             return SCALAR_VALUE_KEYS;
         }
         

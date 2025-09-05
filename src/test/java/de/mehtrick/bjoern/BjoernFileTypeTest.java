@@ -10,6 +10,7 @@ public class BjoernFileTypeTest extends BasePlatformTestCase {
         assertEquals("Extension should be 'zgr'", "zgr", BjoernFileType.INSTANCE.getDefaultExtension());
         assertEquals("Name should be 'Bjoern File'", "Bjoern File", BjoernFileType.INSTANCE.getName());
         assertEquals("Description should mention Bjoern", "Bjoern BDD specification file", BjoernFileType.INSTANCE.getDescription());
+        assertNotNull("Icon should not be null", BjoernFileType.INSTANCE.getIcon());
     }
 
     public void testBjoernLanguage() {
