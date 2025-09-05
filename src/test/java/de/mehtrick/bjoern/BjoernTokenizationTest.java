@@ -7,14 +7,14 @@ import org.jetbrains.yaml.YAMLTokenTypes;
 
 public class BjoernTokenizationTest extends BasePlatformTestCase {
 
-    public void testLayeredLexerDoubleQuotedStrings() {
-        // Test if the new layered lexer correctly identifies double-quoted strings
+    public void testValidatingLexerDoubleQuotedStrings() {
+        // Test if the new validating lexer correctly identifies double-quoted strings
         String testContent = "Given:\n  - A user with username \"john.doe\"\n  - Password is \"securePassword123\"";
         
-        Lexer lexer = new BjoernLayeredLexer();
+        Lexer lexer = new BjoernValidatingLexer();
         lexer.start(testContent);
         
-        System.out.println("Testing layered lexer with: " + testContent);
+        System.out.println("Testing validating lexer with: " + testContent);
         
         int doubleQuotedCount = 0;
         
@@ -41,7 +41,7 @@ public class BjoernTokenizationTest extends BasePlatformTestCase {
         // Test if YAML lexer correctly tokenizes double-quoted strings
         String testContent = "Given:\n  - A user with username \"john.doe\"\n  - Password is \"securePassword123\"";
         
-        Lexer lexer = new BjoernLayeredLexer();
+        Lexer lexer = new BjoernValidatingLexer();
         lexer.start(testContent);
         
         System.out.println("Tokenizing: " + testContent);
@@ -61,6 +61,40 @@ public class BjoernTokenizationTest extends BasePlatformTestCase {
         }
     }
     
+    public void testKeywordValidation() {
+        // Test that valid and invalid keywords are correctly identified
+        String testContent = "Feature:\nInvalidKeyword:\nGiven:";
+        
+        Lexer lexer = new BjoernValidatingLexer();
+        lexer.start(testContent);
+        
+        System.out.println("Testing keyword validation with: " + testContent);
+        
+        int validKeywords = 0;
+        int invalidKeywords = 0;
+        
+        while (lexer.getTokenType() != null) {
+            IElementType tokenType = lexer.getTokenType();
+            String tokenText = lexer.getTokenText();
+            
+            System.out.println("Token: " + tokenType + " = '" + tokenText + "'");
+            
+            if (tokenType == BjoernTokenTypes.VALID_KEYWORD) {
+                System.out.println("  *** VALID BDD KEYWORD: " + tokenText);
+                validKeywords++;
+            } else if (tokenType == BjoernTokenTypes.INVALID_KEYWORD) {
+                System.out.println("  *** INVALID KEYWORD: " + tokenText);
+                invalidKeywords++;
+            }
+            
+            lexer.advance();
+        }
+        
+        // We should find valid keywords (Feature, Given) and invalid ones (InvalidKeyword)
+        assertTrue("Should find valid keywords", validKeywords > 0);
+        assertTrue("Should find invalid keywords", invalidKeywords > 0);
+    }
+    
     public void testVariousStringTypes() {
         // Test different string formats
         String[] testCases = {
@@ -74,7 +108,7 @@ public class BjoernTokenizationTest extends BasePlatformTestCase {
         for (String testCase : testCases) {
             System.out.println("\n--- Testing: " + testCase + " ---");
             
-            Lexer lexer = new BjoernLayeredLexer();
+            Lexer lexer = new BjoernValidatingLexer();
             lexer.start(testCase);
             
             while (lexer.getTokenType() != null) {

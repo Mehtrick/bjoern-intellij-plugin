@@ -10,11 +10,31 @@ public class BjoernSyntaxHighlighterTest extends BasePlatformTestCase {
     public void testKeywordHighlighting() {
         BjoernSyntaxHighlighter highlighter = new BjoernSyntaxHighlighter();
         
-        // Test that SCALAR_KEY tokens are highlighted as keywords
+        // Test that SCALAR_KEY tokens are highlighted as regular YAML keys
         TextAttributesKey[] keys = highlighter.getTokenHighlights(YAMLTokenTypes.SCALAR_KEY);
         assertNotNull("Should return highlighting for SCALAR_KEY", keys);
         assertEquals("Should have one highlighting key", 1, keys.length);
+        assertEquals("Should highlight as YAML scalar key", BjoernSyntaxHighlighter.YAML_SCALAR_KEY, keys[0]);
+    }
+    
+    public void testValidKeywordHighlighting() {
+        BjoernSyntaxHighlighter highlighter = new BjoernSyntaxHighlighter();
+        
+        // Test that valid BDD keywords are highlighted correctly
+        TextAttributesKey[] keys = highlighter.getTokenHighlights(BjoernTokenTypes.VALID_KEYWORD);
+        assertNotNull("Should return highlighting for VALID_KEYWORD", keys);
+        assertEquals("Should have one highlighting key", 1, keys.length);
         assertEquals("Should highlight as Bjoern keyword", BjoernSyntaxHighlighter.BJOERN_KEYWORD, keys[0]);
+    }
+    
+    public void testInvalidKeywordHighlighting() {
+        BjoernSyntaxHighlighter highlighter = new BjoernSyntaxHighlighter();
+        
+        // Test that invalid keywords are highlighted as errors
+        TextAttributesKey[] keys = highlighter.getTokenHighlights(BjoernTokenTypes.INVALID_KEYWORD);
+        assertNotNull("Should return highlighting for INVALID_KEYWORD", keys);
+        assertEquals("Should have one highlighting key", 1, keys.length);
+        assertEquals("Should highlight as invalid keyword", BjoernSyntaxHighlighter.BJOERN_INVALID_KEYWORD, keys[0]);
     }
 
     public void testVariableHighlighting() {
