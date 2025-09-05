@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gem outline -->
+  <path d="M8 2 L12 6 L8 14 L4 6 Z" stroke="#40E0D0" stroke-width="1" fill="#48D1CC"/>
+  
+  <!-- Gem facets for depth -->
+  <path d="M8 2 L10 6 L8 14" fill="#20B2AA" fill-opacity="0.8"/>
+  <path d="M8 2 L6 6 L8 14" fill="#5F9EA0" fill-opacity="0.8"/>
+  
+  <!-- Top facet highlight -->
+  <path d="M8 2 L10 4 L8 6 L6 4 Z" fill="#F0FFFF" fill-opacity="0.9"/>
+  
+  <!-- Center highlight line -->
+  <line x1="8" y1="2" x2="8" y2="6" stroke="#E0FFFF" stroke-width="0.5"/>
+  
+  <!-- Side facet lines -->
+  <line x1="6" y1="4" x2="8" y2="14" stroke="#40E0D0" stroke-width="0.3"/>
+  <line x1="10" y1="4" x2="8" y2="14" stroke="#40E0D0" stroke-width="0.3"/>
+  
+  <!-- Inner sparkle -->
+  <circle cx="7" cy="5" r="0.5" fill="#FFFFFF" fill-opacity="1"/>
+  <circle cx="9" cy="8" r="0.3" fill="#FFFFFF" fill-opacity="0.8"/>
+</svg>

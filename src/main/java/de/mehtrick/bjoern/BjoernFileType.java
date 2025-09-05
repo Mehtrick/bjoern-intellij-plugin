@@ -35,6 +35,6 @@ public class BjoernFileType extends LanguageFileType {
     @Nullable
     @Override
     public Icon getIcon() {
-        return IconLoader.getIcon("/icons/guitar.svg", BjoernFileType.class);
+        return IconLoader.getIcon("/icons/gem.svg", BjoernFileType.class);
     }
 }
