@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij' version '1.17.4'
+    id 'org.jetbrains.intellij' version '1.13.3'
 }
 
 group = 'de.mehtrick'
@@ -11,33 +11,22 @@ repositories {
 }
 
 // Configure Gradle IntelliJ Plugin
-// Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellij {
-    version = '2023.2.7'
+    version = '2022.3.3'
     type = 'IC' // Target IDE Platform
     
-    plugins = ['com.intellij.modules.platform', 'yaml']
+    plugins = ['yaml']
 }
 
 tasks {
     // Set the JVM compatibility versions
     withType(JavaCompile) {
-        sourceCompatibility = "17"
-        targetCompatibility = "17"
+        sourceCompatibility = "11"
+        targetCompatibility = "11"
     }
 
     patchPluginXml {
-        sinceBuild = '232'
-        untilBuild = '242.*'
-    }
-
-    signPlugin {
-        certificateChain = System.getenv("CERTIFICATE_CHAIN")
-        privateKey = System.getenv("PRIVATE_KEY")
-        password = System.getenv("PRIVATE_KEY_PASSWORD")
-    }
-
-    publishPlugin {
-        token = System.getenv("PUBLISH_TOKEN")
+        sinceBuild = '223'
+        untilBuild = '232.*'
     }
 }

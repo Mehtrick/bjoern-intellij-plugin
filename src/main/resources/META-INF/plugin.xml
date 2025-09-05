@@ -7,10 +7,9 @@
     IntelliJ IDEA plugin for Bjoern BDD specification language support.
     
     Features:
-    - Syntax highlighting for .zgr files
-    - BDD keyword highlighting (Feature, Background, Given, When, Then, Scenario, Scenarios)
-    - YAML structure validation
-    - File type recognition for .zgr files
+    - File type recognition for .zgr files  
+    - Basic syntax highlighting for BDD keywords (Feature, Background, Given, When, Then, Scenario, Scenarios)
+    - YAML-based structure support
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
@@ -24,7 +23,7 @@
                   language="Bjoern" 
                   extensions="zgr"/>
         
-        <!-- Language -->
+        <!-- Language (inherits from YAML) -->
         <lang.parserDefinition language="Bjoern"
                               implementationClass="de.mehtrick.bjoern.BjoernParserDefinition"/>
         
@@ -32,8 +31,4 @@
         <lang.syntaxHighlighterFactory language="Bjoern"
                                       implementationClass="de.mehtrick.bjoern.BjoernSyntaxHighlighterFactory"/>
     </extensions>
-
-    <actions>
-        <!-- Add actions here -->
-    </actions>
 </idea-plugin>
