@@ -109,8 +109,17 @@ public class BjoernCompletionContributor extends CompletionContributor {
     
     private static boolean isUnderListItem(String text, int offset) {
         // Check if we're already under a list item (starts with -)
-        int lineStart = text.lastIndexOf('\n', offset) + 1;
-        String currentLine = text.substring(lineStart, Math.min(offset, text.length()));
+        if (offset <= 0 || offset > text.length()) {
+            return false;
+        }
+        
+        int lineStart = text.lastIndexOf('\n', offset - 1) + 1;
+        // Ensure lineStart is not greater than offset
+        if (lineStart > offset) {
+            lineStart = 0;
+        }
+        
+        String currentLine = text.substring(lineStart, offset);
         return currentLine.trim().startsWith("-");
     }
     
