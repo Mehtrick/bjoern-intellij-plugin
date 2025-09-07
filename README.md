@@ -83,10 +83,31 @@ The `examples/` directory contains sample `.zgr` files demonstrating the Bjoern 
 
 ## Development
 
-### Building
+For comprehensive plugin development documentation, see **[PLUGIN-DEVELOPMENT-GUIDE.md](PLUGIN-DEVELOPMENT-GUIDE.md)** - this guide explains how the plugin works and provides a foundation for understanding IntelliJ plugin development, even if you have no prior experience.
+
+### Plugin Architecture
+
+The Bjoern plugin extends IntelliJ IDEA's core functionality through several key components:
+
+- **Language Support**: Registers `.zgr` files as a new language type with custom syntax
+- **Syntax Highlighting**: Colors BDD keywords, variables, and validates keyword correctness  
+- **Smart Completion**: Context-aware auto-completion with dynamic suggestions from file content
+- **Formatting**: Auto-indentation rules that understand BDD structure hierarchy
+- **File Recognition**: Custom teal gem icon and proper file type association
+
+The plugin inherits from YAML parsing for structural validation while adding BDD-specific enhancements.
+
+### Quick Start
 
 ```bash
+# Build the plugin
 ./gradlew build
+
+# Run IntelliJ with the plugin for testing
+./gradlew runIde
+
+# Run tests
+./gradlew test
 ```
 
 ### Testing
