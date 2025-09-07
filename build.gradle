@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij.platform' version '2.1.0'
+    id 'org.jetbrains.intellij' version '1.17.4'
 }
 
 group = 'de.mehtrick'
@@ -8,45 +8,35 @@ version = '1.0.0'
 
 repositories {
     mavenCentral()
-    intellijPlatform {
-        defaultRepositories()
-    }
+    maven { url 'https://www.jetbrains.com/intellij-repository/releases' }
+    maven { url 'https://www.jetbrains.com/intellij-repository/snapshots' }
 }
 
 dependencies {
-    // Using modern IntelliJ Platform dependency configuration
-    // This replaces the deprecated setupDependencies task
-    intellijPlatform {
-        intellijIdeaCommunity("2024.3.1")
-        bundledPlugin("org.jetbrains.plugins.yaml")
-        
-        pluginVerifier()
-        zipSigner()
-        instrumentationTools()
-    }
+    // Dependencies will be configured by intellij plugin
 }
 
 // Set the JVM compatibility versions
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+intellij {
+    version = '2023.3.8'
+    type = 'IC' // IntelliJ IDEA Community Edition
+    plugins = ['yaml']
 }
 
 tasks.withType(JavaCompile) {
-    sourceCompatibility = "21"
-    targetCompatibility = "21"
+    options.encoding = 'UTF-8'
 }
 
-intellijPlatform {
-    pluginConfiguration {
-        ideaVersion {
-            sinceBuild = "243"
-            untilBuild = "243.*"
-        }
-    }
-    
-    publishing {
-        token = providers.environmentVariable("PUBLISH_TOKEN")
-    }
+tasks.named('patchPluginXml') {
+    sinceBuild = '233'
+    untilBuild = '243.*'
+}
+
+tasks.named('publishPlugin') {
+    token = providers.environmentVariable("PUBLISH_TOKEN")
 }
