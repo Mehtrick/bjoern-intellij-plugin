@@ -3,6 +3,7 @@ package de.mehtrick.bjoern;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
 import com.intellij.patterns.PlatformPatterns;
+import com.intellij.patterns.StandardPatterns;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.util.PsiTreeUtil;
@@ -23,59 +24,74 @@ public class BjoernCompletionContributor extends CompletionContributor {
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\"[^\"]*\"");
 
     public BjoernCompletionContributor() {
-        // Universal completion provider that handles all completion scenarios
+        // Primary completion provider for Bjoern files - using multiple patterns for better coverage
         extend(CompletionType.BASIC,
-                PlatformPatterns.psiElement(),
-                new CompletionProvider<CompletionParameters>() {
-                    @Override
-                    protected void addCompletions(@NotNull CompletionParameters parameters,
-                                                  @NotNull ProcessingContext context,
-                                                  @NotNull CompletionResultSet result) {
-                        // Only provide completions in Bjoern files
-                        if (!(parameters.getOriginalFile() instanceof BjoernFile)) {
-                            return;
-                        }
-                        
-                        PsiElement element = parameters.getPosition();
-                        String currentContext = getCurrentBDDContext(element);
-                        String text = parameters.getEditor().getDocument().getText();
-                        int offset = parameters.getOffset();
-                        
-                        // Always provide BDD keyword completions
-                        boolean shouldShowKeywords = shouldShowKeywordCompletion(text, offset);
-                        if (shouldShowKeywords) {
-                            for (String keyword : BDD_KEYWORDS) {
-                                result.addElement(LookupElementBuilder.create(keyword)
-                                        .withBoldness(true)
-                                        .withTypeText("BDD Keyword"));
-                            }
-                        }
-                        
-                        // Provide smart completion based on context
-                        if (currentContext != null) {
-                            Set<String> suggestions = extractStatementsFromFile(parameters.getOriginalFile(), currentContext);
-                            
-                            for (String suggestion : suggestions) {
-                                String lookupText = isUnderListItem(text, offset) ? suggestion : "- " + suggestion;
-                                result.addElement(LookupElementBuilder.create(lookupText)
-                                        .withTypeText(currentContext + " suggestion")
-                                        .withInsertHandler((context1, item) -> {
-                                            // Place cursor at first variable placeholder if any
-                                            int caretOffset = context1.getEditor().getCaretModel().getOffset();
-                                            String insertedText = item.getLookupString();
-                                            int firstQuote = insertedText.indexOf("\"\"");
-                                            if (firstQuote != -1) {
-                                                context1.getEditor().getCaretModel().moveToOffset(caretOffset - insertedText.length() + firstQuote + 1);
-                                            }
-                                        }));
-                            }
-                        }
-                    }
-                });
+                PlatformPatterns.psiElement()
+                        .inFile(PlatformPatterns.psiFile().withName(StandardPatterns.string().endsWith(".zgr"))),
+                new BjoernCompletionProvider());
+        
+        // Backup completion provider for YAML-based structures
+        extend(CompletionType.BASIC,
+                PlatformPatterns.psiElement(YAMLTokenTypes.TEXT)
+                        .inFile(PlatformPatterns.psiFile().withName(StandardPatterns.string().endsWith(".zgr"))),
+                new BjoernCompletionProvider());
+        
+        // Additional pattern for YAML scalar values
+        extend(CompletionType.BASIC,
+                PlatformPatterns.psiElement(YAMLTokenTypes.SCALAR_KEY)
+                        .inFile(PlatformPatterns.psiFile().withName(StandardPatterns.string().endsWith(".zgr"))),
+                new BjoernCompletionProvider());
     }
     
+    private static class BjoernCompletionProvider extends CompletionProvider<CompletionParameters> {
+        @Override
+        protected void addCompletions(@NotNull CompletionParameters parameters,
+                                      @NotNull ProcessingContext context,
+                                      @NotNull CompletionResultSet result) {
+            // Debug: Always try to provide completions for .zgr files
+            PsiFile file = parameters.getOriginalFile();
+            if (file == null || !file.getName().endsWith(".zgr")) {
+                return;
+            }
+            
+            PsiElement element = parameters.getPosition();
+            String currentContext = getCurrentBDDContext(element);
+            String text = parameters.getEditor().getDocument().getText();
+            int offset = parameters.getOffset();
+            
+            // Always provide BDD keyword completions
+            boolean shouldShowKeywords = shouldShowKeywordCompletion(text, offset);
+            if (shouldShowKeywords) {
+                for (String keyword : BDD_KEYWORDS) {
+                    result.addElement(LookupElementBuilder.create(keyword)
+                            .withBoldness(true)
+                            .withTypeText("BDD Keyword"));
+                }
+            }
+            
+            // Provide smart completion based on context
+            if (currentContext != null) {
+                Set<String> suggestions = extractStatementsFromFile(file, currentContext);
+                
+                for (String suggestion : suggestions) {
+                    String lookupText = isUnderListItem(text, offset) ? suggestion : "- " + suggestion;
+                    result.addElement(LookupElementBuilder.create(lookupText)
+                            .withTypeText(currentContext + " suggestion")
+                            .withInsertHandler((context1, item) -> {
+                                // Place cursor at first variable placeholder if any
+                                int caretOffset = context1.getEditor().getCaretModel().getOffset();
+                                String insertedText = item.getLookupString();
+                                int firstQuote = insertedText.indexOf("\"\"");
+                                if (firstQuote != -1) {
+                                    context1.getEditor().getCaretModel().moveToOffset(caretOffset - insertedText.length() + firstQuote + 1);
+                                }
+                            }));
+                }
+            }
+        }
+    }
     
-    private boolean shouldShowKeywordCompletion(String text, int offset) {
+    private static boolean shouldShowKeywordCompletion(String text, int offset) {
         // Show keyword completion at beginning of line or after whitespace
         if (offset == 0) return true;
         if (offset > 0 && text.charAt(offset - 1) == '\n') return true;
@@ -91,14 +107,14 @@ public class BjoernCompletionContributor extends CompletionContributor {
         return false;
     }
     
-    private boolean isUnderListItem(String text, int offset) {
+    private static boolean isUnderListItem(String text, int offset) {
         // Check if we're already under a list item (starts with -)
         int lineStart = text.lastIndexOf('\n', offset) + 1;
         String currentLine = text.substring(lineStart, Math.min(offset, text.length()));
         return currentLine.trim().startsWith("-");
     }
     
-    private String getCurrentBDDContext(PsiElement element) {
+    private static String getCurrentBDDContext(PsiElement element) {
         // Walk up the PSI tree to find the current BDD context (Given, When, Then)
         YAMLKeyValue currentKeyValue = PsiTreeUtil.getParentOfType(element, YAMLKeyValue.class);
         
@@ -114,7 +130,7 @@ public class BjoernCompletionContributor extends CompletionContributor {
         return getCurrentBDDContextFromText(element);
     }
     
-    private String getCurrentBDDContextFromText(PsiElement element) {
+    private static String getCurrentBDDContextFromText(PsiElement element) {
         PsiFile file = element.getContainingFile();
         String text = file.getText();
         int offset = element.getTextOffset();
@@ -136,7 +152,7 @@ public class BjoernCompletionContributor extends CompletionContributor {
         return null;
     }
     
-    private Set<String> extractStatementsFromFile(PsiFile file, String contextType) {
+    private static Set<String> extractStatementsFromFile(PsiFile file, String contextType) {
         Set<String> statements = new LinkedHashSet<>();
         String text = file.getText();
         

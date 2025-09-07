@@ -54,5 +54,8 @@
         <!-- Code Completion -->
         <completion.contributor language="Bjoern"
                                implementationClass="de.mehtrick.bjoern.BjoernCompletionContributor"/>
+        <!-- Backup completion for YAML language (since we inherit from YAML) -->
+        <completion.contributor language="yaml"
+                               implementationClass="de.mehtrick.bjoern.BjoernCompletionContributor"/>
     </extensions>
 </idea-plugin>
