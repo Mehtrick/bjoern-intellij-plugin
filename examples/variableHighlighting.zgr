@@ -1,0 +1,21 @@
+Feature: Variable Highlighting Demo
+Background:
+  Given:
+    - A system with variable support
+    - Configuration file located at /config/settings.yaml
+Scenarios:
+  - Scenario: Variable highlighting test
+    Given:
+      - A user with username "john.doe"
+      - Password is "securePassword123"
+      - User role is admin
+      - Session timeout is "3600" seconds
+    When:
+      - User logs in with credentials "john.doe" and "securePassword123"
+      - System validates user permissions
+      - Timeout is set to "3600"
+    Then:
+      - Login should be successful
+      - Session should display "Welcome, john.doe!"
+      - Timeout warning at "3540" seconds remaining
+      - Log entry: User logged in successfully

@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.intellij.platform' version '2.1.0'
+}
+
+group = 'de.mehtrick'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+    intellijPlatform {
+        defaultRepositories()
+    }
+}
+
+dependencies {
+    // Using modern IntelliJ Platform dependency configuration
+    // This replaces the deprecated setupDependencies task
+    intellijPlatform {
+        intellijIdeaCommunity("2024.3.1")
+        bundledPlugin("org.jetbrains.plugins.yaml")
+        
+        pluginVerifier()
+        zipSigner()
+        instrumentationTools()
+    }
+}
+
+// Set the JVM compatibility versions
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.withType(JavaCompile) {
+    sourceCompatibility = "21"
+    targetCompatibility = "21"
+}
+
+intellijPlatform {
+    pluginConfiguration {
+        ideaVersion {
+            sinceBuild = "243"
+            untilBuild = "243.*"
+        }
+    }
+    
+    publishing {
+        token = providers.environmentVariable("PUBLISH_TOKEN")
+    }
+}

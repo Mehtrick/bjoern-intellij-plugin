@@ -1,0 +1,24 @@
+Feature: Enhanced Formatting Example
+Background:
+  Given:
+    - A test environment is set up
+    - Basic configuration is loaded
+Scenarios:
+  - Scenario: User login with valid credentials
+    Given:
+      - A user with username "testuser"
+      - Password is "securepass123"
+    When:
+      - User attempts to login
+    Then:
+      - Login should be successful
+      - User should see welcome message "Hello testuser!"
+  - Scenario: User login with invalid credentials
+    Given:
+      - A user with username "invaliduser"
+      - Password is "wrongpass"
+    When:
+      - User attempts to login
+    Then:
+      - Login should fail
+      - Error message should display "Invalid credentials"

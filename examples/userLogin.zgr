@@ -1,0 +1,25 @@
+Feature: User Login Test
+Background:
+  Given:
+    - A user registration system
+    - An empty database
+Scenarios:
+  - Scenario: Successful login with valid credentials
+    Given:
+      - A registered user with username "john.doe"
+      - Password is "securePassword123"
+    When:
+      - User attempts to login with correct credentials
+    Then:
+      - Login should be successful
+      - User should be redirected to dashboard
+  - Scenario: Failed login with invalid password
+    Given:
+      - A registered user with username "john.doe"
+      - Password is "securePassword123"
+    When:
+      - User attempts to login with username "john.doe"
+      - User enters wrong password "wrongPassword"
+    Then:
+      - Login should fail
+      - Error message "Invalid credentials" should be displayed

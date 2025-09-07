@@ -1,0 +1,61 @@
+<idea-plugin>
+    <id>de.mehtrick.bjoern-intellij-plugin</id>
+    <name>Bjoern Language Support</name>
+    <vendor email="support@mehtrick.de" url="https://github.com/Mehtrick">Mehtrick</vendor>
+
+    <description><![CDATA[
+    IntelliJ IDEA plugin for Bjoern BDD specification language support.
+    
+    Features:
+    - File type recognition for .zgr files with custom teal gem icon
+    - Syntax highlighting for valid BDD keywords (Feature, Background, Given, When, Then, Scenario, Scenarios)
+    - Invalid keyword detection and highlighting
+    - Enhanced variable highlighting for double-quoted strings
+    - Auto-indentation support with smart line indentation for proper BDD structure
+    - Intelligent code completion for BDD keywords and common statements
+    - YAML-based structure support
+    
+    Indentation Rules:
+    - Feature, Background, Scenarios: No indentation (column 0)
+    - Given/When/Then under Background: 2 spaces
+    - Scenario items under Scenarios: 2 spaces  
+    - Given/When/Then under Scenario: 4 spaces
+    - List items under Given/When/Then in Background: 4 spaces
+    - List items under Given/When/Then in Scenario: 6 spaces
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.plugins.yaml</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- File Type -->
+        <fileType name="Bjoern File" 
+                  implementationClass="de.mehtrick.bjoern.BjoernFileType" 
+                  fieldName="INSTANCE" 
+                  language="Bjoern" 
+                  extensions="zgr"/>
+        
+        <!-- Language (inherits from YAML) -->
+        <lang.parserDefinition language="Bjoern"
+                              implementationClass="de.mehtrick.bjoern.BjoernParserDefinition"/>
+        
+        <!-- Syntax Highlighter -->
+        <lang.syntaxHighlighterFactory language="Bjoern"
+                                      implementationClass="de.mehtrick.bjoern.BjoernSyntaxHighlighterFactory"/>
+        
+        <!-- Formatting Model Builder for auto-indentation -->
+        <lang.formatter language="Bjoern"
+                       implementationClass="de.mehtrick.bjoern.BjoernFormattingModelBuilder"/>
+        
+        <!-- Line Indent Provider for smart indentation -->
+        <lang.lineIndentProvider language="Bjoern"
+                                implementationClass="de.mehtrick.bjoern.BjoernLineIndentProvider"/>
+        
+        <!-- Code Completion -->
+        <completion.contributor language="Bjoern"
+                               implementationClass="de.mehtrick.bjoern.BjoernCompletionContributor"/>
+        <!-- Backup completion for YAML language (since we inherit from YAML) -->
+        <completion.contributor language="yaml"
+                               implementationClass="de.mehtrick.bjoern.BjoernCompletionContributor"/>
+    </extensions>
+</idea-plugin>

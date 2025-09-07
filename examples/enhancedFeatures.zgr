@@ -1,0 +1,25 @@
+Feature: Enhanced Plugin Test
+Background:
+  Given:
+    - A test environment with enhanced plugin features
+    - System configured for teal gem icon display
+Scenarios:
+  - Scenario: Valid and invalid keyword demonstration
+    Given:
+      - A user with username "testUser"
+      - Password is "securePass123"
+    When:
+      - User performs login action
+    Then:
+      - Login should be successful
+      - Welcome message displays "Hello, testUser!"
+    
+    # These should be highlighted as invalid keywords:
+    InvalidKeyword:
+      - This should be marked as invalid
+    AnotherInvalid:
+      - Another invalid keyword test
+    
+    # Valid keywords should be highlighted normally:
+    Given:
+      - Additional valid step with "variableValue"
