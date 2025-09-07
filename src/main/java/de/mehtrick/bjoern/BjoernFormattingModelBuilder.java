@@ -13,9 +13,12 @@ import org.jetbrains.yaml.formatter.YAMLFormattingModelBuilder;
 public class BjoernFormattingModelBuilder implements FormattingModelBuilder {
     private final YAMLFormattingModelBuilder yamlBuilder = new YAMLFormattingModelBuilder();
 
+    @NotNull
     @Override
-    public @NotNull FormattingModel createModel(@NotNull FormattingContext formattingContext) {
-        // Use YAML formatting as base but customize for Bjoern
+    public FormattingModel createModel(@NotNull FormattingContext formattingContext) {
+        // Use YAML formatting as base - custom Bjoern BDD formatting is complex to implement
+        // The LineIndentProvider handles proper indentation when users press Enter
+        // Full document formatting follows YAML rules for now
         return yamlBuilder.createModel(formattingContext);
     }
 }

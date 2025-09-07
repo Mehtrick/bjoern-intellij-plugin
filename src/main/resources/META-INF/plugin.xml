@@ -11,9 +11,17 @@
     - Syntax highlighting for valid BDD keywords (Feature, Background, Given, When, Then, Scenario, Scenarios)
     - Invalid keyword detection and highlighting
     - Enhanced variable highlighting for double-quoted strings
-    - Auto-indentation support
+    - Auto-indentation support with smart line indentation for proper BDD structure
     - Intelligent code completion for BDD keywords and common statements
     - YAML-based structure support
+    
+    Indentation Rules:
+    - Feature, Background, Scenarios: No indentation (column 0)
+    - Given/When/Then under Background: 2 spaces
+    - Scenario items under Scenarios: 2 spaces  
+    - Given/When/Then under Scenario: 4 spaces
+    - List items under Given/When/Then in Background: 4 spaces
+    - List items under Given/When/Then in Scenario: 6 spaces
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
@@ -38,6 +46,10 @@
         <!-- Formatting Model Builder for auto-indentation -->
         <lang.formatter language="Bjoern"
                        implementationClass="de.mehtrick.bjoern.BjoernFormattingModelBuilder"/>
+        
+        <!-- Line Indent Provider for smart indentation -->
+        <lang.lineIndentProvider language="Bjoern"
+                                implementationClass="de.mehtrick.bjoern.BjoernLineIndentProvider"/>
         
         <!-- Code Completion -->
         <completion.contributor language="Bjoern"
