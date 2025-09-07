@@ -1,0 +1,44 @@
+version: 2
+
+updates:
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Gradle dependencies
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    groups:
+      gradle-core:
+        patterns:
+          - "org.jetbrains.intellij.platform*"
+          - "gradle*"
+        update-types:
+          - "minor"
+          - "patch"
+      java-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "org.jetbrains.intellij.platform*"
+          - "gradle*"
+        update-types:
+          - "minor"
+          - "patch"
