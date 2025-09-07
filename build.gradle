@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij.platform' version '2.0.1'
+    id 'org.jetbrains.intellij.platform' version '2.1.0'
 }
 
 group = 'de.mehtrick'
@@ -17,7 +17,7 @@ dependencies {
     // Using modern IntelliJ Platform dependency configuration
     // This replaces the deprecated setupDependencies task
     intellijPlatform {
-        intellijIdeaCommunity("2023.3.8")
+        intellijIdeaCommunity("2024.3.1")
         bundledPlugin("org.jetbrains.plugins.yaml")
         
         pluginVerifier()
@@ -42,7 +42,7 @@ intellijPlatform {
     pluginConfiguration {
         ideaVersion {
             sinceBuild = "233"
-            untilBuild = "234.*"
+            untilBuild = "243.*"
         }
     }
     
