@@ -35,9 +35,9 @@ jobs:
       id: version
       run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
       
-    - name: Update version in build.gradle
+    - name: Update version in build.gradle.kts
       run: |
-        sed -i "s/version = '.*'/version = '${{ steps.version.outputs.VERSION }}'/" build.gradle
+        sed -i "s/version = '.*'/version = '${{ steps.version.outputs.VERSION }}'/" build.gradle.kts
         
     - name: Verify plugin project configuration
       run: ./gradlew verifyPluginProjectConfiguration
