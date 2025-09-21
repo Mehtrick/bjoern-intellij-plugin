@@ -1,3 +1,6 @@
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.intellij.platform.gradle.models.ProductRelease
+
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.1.0"
@@ -5,10 +8,15 @@ plugins {
 }
 
 group = "de.mehtrick"
-version = "1.0.0"
+version = "1.0.1"
+
+kotlin {
+    jvmToolchain(21)
+}
 
 repositories {
     mavenCentral()
+
     intellijPlatform {
         defaultRepositories()
     }
@@ -16,7 +24,7 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        create("IC", "2025.1.4.1")
+        create("IC", "2025.2.2")
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
 
         // Add necessary plugin dependencies for compilation here, example:
@@ -48,6 +56,7 @@ intellijPlatform {
     pluginConfiguration {
         ideaVersion {
             sinceBuild = "251"
+            untilBuild = "252.*"
         }
 
         changeNotes = """
@@ -58,4 +67,11 @@ intellijPlatform {
     publishing {
         token = providers.environmentVariable("PUBLISH_TOKEN")
     }
+
+    pluginVerification {
+        ides {
+            recommended()
+        }
+    }
+
 }
