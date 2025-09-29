@@ -4,7 +4,7 @@ import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.1.0"
-    id("org.jetbrains.intellij.platform") version "2.7.1"
+    id("org.jetbrains.intellij.platform") version "2.9.0"
 }
 
 group = "de.mehtrick"
@@ -24,7 +24,7 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        create("IC", "2024.2.5")
+        create("IC", "2025.2.2")
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
 
         // Add necessary plugin dependencies for compilation here, example:
