@@ -36,11 +36,16 @@ public class BjoernSyntaxHighlighter extends SyntaxHighlighterBase {
     public static final TextAttributesKey BJOERN_VARIABLE =
             createTextAttributesKey("BJOERN_VARIABLE", DefaultLanguageHighlighterColors.CONSTANT);
 
+    // Comment highlighting
+    public static final TextAttributesKey BJOERN_COMMENT =
+            createTextAttributesKey("BJOERN_COMMENT", DefaultLanguageHighlighterColors.LINE_COMMENT);
+
     private static final TextAttributesKey[] KEYWORD_KEYS = new TextAttributesKey[]{BJOERN_KEYWORD};
     private static final TextAttributesKey[] INVALID_KEYWORD_KEYS = new TextAttributesKey[]{BJOERN_INVALID_KEYWORD};
     private static final TextAttributesKey[] SCALAR_KEY_KEYS = new TextAttributesKey[]{BJOERN_SCALAR_KEY};
     private static final TextAttributesKey[] SCALAR_VALUE_KEYS = new TextAttributesKey[]{BJOERN_SCALAR_VALUE};
     private static final TextAttributesKey[] VARIABLE_KEYS = new TextAttributesKey[]{BJOERN_VARIABLE};
+    private static final TextAttributesKey[] COMMENT_KEYS = new TextAttributesKey[]{BJOERN_COMMENT};
     private static final TextAttributesKey[] EMPTY_KEYS = new TextAttributesKey[0];
 
     @Override
@@ -70,6 +75,17 @@ public class BjoernSyntaxHighlighter extends SyntaxHighlighterBase {
         // Handle our custom double-quoted token as variables
         else if (tokenType == BjoernTokenTypes.DOUBLE_QUOTED_STRING) {
             return VARIABLE_KEYS;
+        }
+        // Handle hash comments (custom)
+        else if (tokenType == BjoernTokenTypes.COMMENT) {
+            return COMMENT_KEYS;
+        }
+        // Try to handle YAML native comment tokens
+        // YAML might use different token types for comments
+        else if (tokenType.toString().contains("COMMENT") || 
+                 tokenType.toString().contains("comment") ||
+                 tokenType.toString().contains("Comment")) {
+            return COMMENT_KEYS;
         }
         // Handle other string types as regular values
         else if (tokenType == YAMLTokenTypes.SCALAR_STRING) {

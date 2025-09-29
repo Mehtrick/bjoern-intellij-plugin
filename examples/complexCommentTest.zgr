@@ -1,0 +1,15 @@
+Feature: Complex Comment Test
+Background:
+  Given:
+    - A system with "quoted content" #comment after quotes
+    - Database is "ready" #another comment
+Scenarios:
+  - Scenario: Mixed content test
+    Given:
+      - User with "john.doe" and password "secret123" #comment with multiple quotes
+      #This is a comment between statements
+      - Another "variable" here
+    When:
+      - System processes "input" #final comment
+    Then:
+      - Result should be "success"

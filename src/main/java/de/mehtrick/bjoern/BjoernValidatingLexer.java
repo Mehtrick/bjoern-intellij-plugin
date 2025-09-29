@@ -18,5 +18,8 @@ public class BjoernValidatingLexer extends LayeredLexer {
         registerSelfStoppingLayer(new BjoernDoubleQuotedStringLexer(), 
                                   new IElementType[]{YAMLTokenTypes.TEXT}, 
                                   IElementType.EMPTY_ARRAY);
+        
+        // Note: Removed custom comment lexer to let YAML handle comments natively
+        // YAML should process hash comments as comment tokens automatically
     }
 }
