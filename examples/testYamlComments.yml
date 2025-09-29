@@ -1,0 +1,14 @@
+Feature: Test YAML Comments
+Background:
+  Given:
+    - A system is running #this should be a comment
+    - Database is available
+    #Full line YAML comment
+Scenarios:
+  - Scenario: Testing native YAML comment support  
+    Given:
+      - User "test" exists #inline comment
+    When:
+      - Action is performed
+    Then:
+      - Result is "success"
