@@ -18,5 +18,10 @@ public class BjoernValidatingLexer extends LayeredLexer {
         registerSelfStoppingLayer(new BjoernDoubleQuotedStringLexer(), 
                                   new IElementType[]{YAMLTokenTypes.TEXT}, 
                                   IElementType.EMPTY_ARRAY);
+        
+        // Register lexer for hash comments in text content
+        registerSelfStoppingLayer(new BjoernCommentLexer(), 
+                                  new IElementType[]{YAMLTokenTypes.TEXT}, 
+                                  IElementType.EMPTY_ARRAY);
     }
 }

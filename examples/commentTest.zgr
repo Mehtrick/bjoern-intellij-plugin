@@ -1,0 +1,16 @@
+Feature: Test with Comments
+Background:
+  Given:
+    - A user registration system #This is a system comment
+    - An empty database
+Scenarios:
+  - Scenario: Testing comments everywhere
+    Given:
+      - A user with username "john.doe" #inline comment after variable
+      - Password is "securePassword123"
+      #This is a full line comment
+    When:
+      - User attempts to login #another inline comment
+    Then:
+      - Login should be successful
+      #Final comment at the end
