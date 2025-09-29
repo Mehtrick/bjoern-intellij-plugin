@@ -5,7 +5,7 @@ import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.YAMLTokenTypes;
 
-public class BjoernCommentLexer extends LexerBase {
+public class BjoernTextContentLexer extends LexerBase {
     private CharSequence buffer;
     private int startOffset;
     private int endOffset;
@@ -52,9 +52,9 @@ public class BjoernCommentLexer extends LexerBase {
 
         currentTokenStart = currentPosition;
         
-        // Look for hash comments in the text
+        // Check for hash comments first
         if (currentPosition < endOffset && buffer.charAt(currentPosition) == '#') {
-            // Find the end of the line or end of buffer
+            // Find the end of the line or end of buffer for comment
             int commentEnd = findLineEnd(currentPosition);
             currentTokenEnd = commentEnd;
             currentTokenType = BjoernTokenTypes.COMMENT;
@@ -62,18 +62,36 @@ public class BjoernCommentLexer extends LexerBase {
             return;
         }
         
-        // Skip to next potential hash or end of text
-        int nextHash = findNextHash(currentPosition);
-        if (nextHash == -1) {
-            // No more hashes, consume rest as text
+        // Check for double-quoted strings
+        if (currentPosition < endOffset && buffer.charAt(currentPosition) == '"') {
+            // Find the closing quote
+            int closeQuote = findClosingQuote(currentPosition + 1);
+            if (closeQuote != -1) {
+                currentTokenEnd = closeQuote + 1;
+                currentTokenType = BjoernTokenTypes.DOUBLE_QUOTED_STRING;
+                currentPosition = currentTokenEnd;
+                return;
+            } else {
+                // Unmatched quote - treat as regular text and skip over it
+                currentTokenEnd = currentPosition + 1;
+                currentTokenType = YAMLTokenTypes.TEXT;
+                currentPosition = currentTokenEnd;
+                return;
+            }
+        }
+        
+        // Skip to next potential special character (quote or hash) or end of text
+        int nextSpecial = findNextSpecialChar(currentPosition);
+        if (nextSpecial == -1) {
+            // No more special chars, consume rest as text
             currentTokenEnd = endOffset;
             currentTokenType = YAMLTokenTypes.TEXT;
             currentPosition = endOffset;
         } else {
-            // Consume text up to the hash
-            currentTokenEnd = nextHash;
+            // Consume text up to the special character
+            currentTokenEnd = nextSpecial;
             currentTokenType = YAMLTokenTypes.TEXT;
-            currentPosition = nextHash;
+            currentPosition = nextSpecial;
         }
     }
 
@@ -87,9 +105,27 @@ public class BjoernCommentLexer extends LexerBase {
         return endOffset; // End of buffer
     }
 
-    private int findNextHash(int startPos) {
+    private int findClosingQuote(int startPos) {
         for (int i = startPos; i < endOffset; i++) {
-            if (buffer.charAt(i) == '#') {
+            char c = buffer.charAt(i);
+            if (c == '"') {
+                // Check if it's escaped
+                int backslashes = 0;
+                for (int j = i - 1; j >= startPos && buffer.charAt(j) == '\\'; j--) {
+                    backslashes++;
+                }
+                if (backslashes % 2 == 0) {
+                    return i; // Even number of backslashes means not escaped
+                }
+            }
+        }
+        return -1; // No closing quote found
+    }
+
+    private int findNextSpecialChar(int startPos) {
+        for (int i = startPos; i < endOffset; i++) {
+            char c = buffer.charAt(i);
+            if (c == '"' || c == '#') {
                 return i;
             }
         }

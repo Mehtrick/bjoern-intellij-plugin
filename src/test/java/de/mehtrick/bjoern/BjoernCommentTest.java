@@ -6,7 +6,7 @@ public class BjoernCommentTest {
 
     public void testCommentLexerFullLineComment() {
         // Test that the lexer can identify full-line comments
-        BjoernCommentLexer lexer = new BjoernCommentLexer();
+        BjoernTextContentLexer lexer = new BjoernTextContentLexer();
         String testText = "#This is a comment";
         
         lexer.start(testText, 0, testText.length(), 0);
@@ -43,7 +43,7 @@ public class BjoernCommentTest {
     
     public void testCommentLexerInlineComment() {
         // Test that the lexer can identify inline comments after content
-        BjoernCommentLexer lexer = new BjoernCommentLexer();
+        BjoernTextContentLexer lexer = new BjoernTextContentLexer();
         String testText = "- A car #does not matter what car";
         
         lexer.start(testText, 0, testText.length(), 0);
@@ -80,7 +80,7 @@ public class BjoernCommentTest {
     
     public void testCommentLexerWithoutComment() {
         // Test that the lexer handles text without comments correctly
-        BjoernCommentLexer lexer = new BjoernCommentLexer();
+        BjoernTextContentLexer lexer = new BjoernTextContentLexer();
         String testText = "- A car without comments";
         
         lexer.start(testText, 0, testText.length(), 0);
@@ -111,7 +111,7 @@ public class BjoernCommentTest {
     
     public void testCommentLexerWithQuotesAndComments() {
         // Test mixed content with both quotes and comments
-        BjoernCommentLexer lexer = new BjoernCommentLexer();
+        BjoernTextContentLexer lexer = new BjoernTextContentLexer();
         String testText = "- User \"john.doe\" and password \"secret\" #comment with quotes";
         
         lexer.start(testText, 0, testText.length(), 0);
@@ -141,7 +141,7 @@ public class BjoernCommentTest {
     
     public void testCommentLexerMultipleHashes() {
         // Test that comments with multiple hash symbols work correctly
-        BjoernCommentLexer lexer = new BjoernCommentLexer();
+        BjoernTextContentLexer lexer = new BjoernTextContentLexer();
         String testText = "text #comment with # multiple ## hashes";
         
         lexer.start(testText, 0, testText.length(), 0);
