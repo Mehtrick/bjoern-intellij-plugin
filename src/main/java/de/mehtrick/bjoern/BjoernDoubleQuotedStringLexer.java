@@ -5,7 +5,7 @@ import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.YAMLTokenTypes;
 
-public class BjoernTextContentLexer extends LexerBase {
+public class BjoernDoubleQuotedStringLexer extends LexerBase {
     private CharSequence buffer;
     private int startOffset;
     private int endOffset;
@@ -52,17 +52,7 @@ public class BjoernTextContentLexer extends LexerBase {
 
         currentTokenStart = currentPosition;
         
-        // Check for hash comments first
-        if (currentPosition < endOffset && buffer.charAt(currentPosition) == '#') {
-            // Find the end of the line or end of buffer for comment
-            int commentEnd = findLineEnd(currentPosition);
-            currentTokenEnd = commentEnd;
-            currentTokenType = BjoernTokenTypes.COMMENT;
-            currentPosition = currentTokenEnd;
-            return;
-        }
-        
-        // Check for double-quoted strings
+        // Look for double-quoted strings in the text
         if (currentPosition < endOffset && buffer.charAt(currentPosition) == '"') {
             // Find the closing quote
             int closeQuote = findClosingQuote(currentPosition + 1);
@@ -80,29 +70,19 @@ public class BjoernTextContentLexer extends LexerBase {
             }
         }
         
-        // Skip to next potential special character (quote or hash) or end of text
-        int nextSpecial = findNextSpecialChar(currentPosition);
-        if (nextSpecial == -1) {
-            // No more special chars, consume rest as text
+        // Skip to next potential quote or end of text
+        int nextQuote = findNextQuote(currentPosition);
+        if (nextQuote == -1) {
+            // No more quotes, consume rest as text
             currentTokenEnd = endOffset;
             currentTokenType = YAMLTokenTypes.TEXT;
             currentPosition = endOffset;
         } else {
-            // Consume text up to the special character
-            currentTokenEnd = nextSpecial;
+            // Consume text up to the quote
+            currentTokenEnd = nextQuote;
             currentTokenType = YAMLTokenTypes.TEXT;
-            currentPosition = nextSpecial;
+            currentPosition = nextQuote;
         }
-    }
-
-    private int findLineEnd(int startPos) {
-        for (int i = startPos; i < endOffset; i++) {
-            char c = buffer.charAt(i);
-            if (c == '\n' || c == '\r') {
-                return i;
-            }
-        }
-        return endOffset; // End of buffer
     }
 
     private int findClosingQuote(int startPos) {
@@ -122,10 +102,9 @@ public class BjoernTextContentLexer extends LexerBase {
         return -1; // No closing quote found
     }
 
-    private int findNextSpecialChar(int startPos) {
+    private int findNextQuote(int startPos) {
         for (int i = startPos; i < endOffset; i++) {
-            char c = buffer.charAt(i);
-            if (c == '"' || c == '#') {
+            if (buffer.charAt(i) == '"') {
                 return i;
             }
         }

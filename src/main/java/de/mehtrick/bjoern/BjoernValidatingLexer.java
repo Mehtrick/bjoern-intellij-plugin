@@ -14,9 +14,12 @@ public class BjoernValidatingLexer extends LayeredLexer {
                                   new IElementType[]{YAMLTokenTypes.SCALAR_KEY}, 
                                   IElementType.EMPTY_ARRAY);
         
-        // Register combined lexer for double-quoted strings and hash comments in text content
-        registerSelfStoppingLayer(new BjoernTextContentLexer(), 
+        // Register lexer for double-quoted strings in text content
+        registerSelfStoppingLayer(new BjoernDoubleQuotedStringLexer(), 
                                   new IElementType[]{YAMLTokenTypes.TEXT}, 
                                   IElementType.EMPTY_ARRAY);
+        
+        // Note: Removed custom comment lexer to let YAML handle comments natively
+        // YAML should process hash comments as comment tokens automatically
     }
 }

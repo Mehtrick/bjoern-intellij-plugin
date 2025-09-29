@@ -76,8 +76,15 @@ public class BjoernSyntaxHighlighter extends SyntaxHighlighterBase {
         else if (tokenType == BjoernTokenTypes.DOUBLE_QUOTED_STRING) {
             return VARIABLE_KEYS;
         }
-        // Handle hash comments
+        // Handle hash comments (custom)
         else if (tokenType == BjoernTokenTypes.COMMENT) {
+            return COMMENT_KEYS;
+        }
+        // Try to handle YAML native comment tokens
+        // YAML might use different token types for comments
+        else if (tokenType.toString().contains("COMMENT") || 
+                 tokenType.toString().contains("comment") ||
+                 tokenType.toString().contains("Comment")) {
             return COMMENT_KEYS;
         }
         // Handle other string types as regular values
