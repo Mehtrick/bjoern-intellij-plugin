@@ -108,4 +108,64 @@ public class BjoernCommentTest {
             throw new AssertionError("Lexer should produce at least one token");
         }
     }
+    
+    public void testCommentLexerWithQuotesAndComments() {
+        // Test mixed content with both quotes and comments
+        BjoernCommentLexer lexer = new BjoernCommentLexer();
+        String testText = "- User \"john.doe\" and password \"secret\" #comment with quotes";
+        
+        lexer.start(testText, 0, testText.length(), 0);
+        
+        boolean foundComment = false;
+        int tokenCount = 0;
+        
+        while (lexer.getTokenType() != null && tokenCount < 10) {
+            IElementType tokenType = lexer.getTokenType();
+            
+            if (tokenType == BjoernTokenTypes.COMMENT) {
+                foundComment = true;
+                String tokenText = testText.substring(lexer.getTokenStart(), lexer.getTokenEnd());
+                if (!"#comment with quotes".equals(tokenText)) {
+                    throw new AssertionError("Expected '#comment with quotes' but got '" + tokenText + "'");
+                }
+            }
+            
+            lexer.advance();
+            tokenCount++;
+        }
+        
+        if (!foundComment) {
+            throw new AssertionError("Should have found a comment token in mixed content");
+        }
+    }
+    
+    public void testCommentLexerMultipleHashes() {
+        // Test that comments with multiple hash symbols work correctly
+        BjoernCommentLexer lexer = new BjoernCommentLexer();
+        String testText = "text #comment with # multiple ## hashes";
+        
+        lexer.start(testText, 0, testText.length(), 0);
+        
+        boolean foundComment = false;
+        int tokenCount = 0;
+        
+        while (lexer.getTokenType() != null && tokenCount < 10) {
+            IElementType tokenType = lexer.getTokenType();
+            
+            if (tokenType == BjoernTokenTypes.COMMENT) {
+                foundComment = true;
+                String tokenText = testText.substring(lexer.getTokenStart(), lexer.getTokenEnd());
+                if (!"#comment with # multiple ## hashes".equals(tokenText)) {
+                    throw new AssertionError("Expected full comment with multiple hashes but got '" + tokenText + "'");
+                }
+            }
+            
+            lexer.advance();
+            tokenCount++;
+        }
+        
+        if (!foundComment) {
+            throw new AssertionError("Should have found comment with multiple hashes");
+        }
+    }
 }

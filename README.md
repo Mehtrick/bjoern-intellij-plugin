@@ -15,6 +15,9 @@ An IntelliJ IDEA plugin for [Bjoern](https://github.com/Mehtrick/bjoern) BDD spe
   - `Scenarios:`
 - **Keyword Validation**: Only valid BDD keywords are highlighted; others are marked as invalid
 - **Variable Highlighting**: Double-quoted strings are highlighted as variables with vibrant colors (e.g., `"john.doe"`, `"123"`)
+- **Comment Support**: Hash comments are properly highlighted with standard comment colors:
+  - Full-line comments: `#This is a comment`
+  - Inline comments: `- A statement #with inline comment`
 - **Auto-indentation**: Proper YAML-based indentation support
 - **Smart Autocomplete**: Intelligent code completion with context-aware suggestions:
   - BDD keyword completion
@@ -80,6 +83,8 @@ The `examples/` directory contains sample `.zgr` files demonstrating the Bjoern 
 - `variableHighlighting.zgr` - Example showing variable highlighting features
 - `enhancedFeatures.zgr` - Demonstrates keyword validation and enhanced features
 - `completionDemo.zgr` - Shows smart autocomplete functionality
+- `commentTest.zgr` - Demonstrates hash comment support (full-line and inline)
+- `complexCommentTest.zgr` - Shows comments mixed with quoted variables
 
 ## Development
 
@@ -117,9 +122,10 @@ Create `.zgr` files and verify that:
 2. BDD keywords are highlighted properly
 3. Invalid keywords are marked as errors
 4. Variables in double quotes are highlighted with vibrant colors
-5. Auto-indentation works correctly
-6. Smart autocomplete provides relevant suggestions
-7. YAML structure is validated
+5. Hash comments are highlighted with standard comment colors (both inline and full-line)
+6. Auto-indentation works correctly
+7. Smart autocomplete provides relevant suggestions
+8. YAML structure is validated
 
 ## Requirements
 
