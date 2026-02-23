@@ -46,9 +46,6 @@ jobs:
     - name: Verify plugin project configuration
       run: ./gradlew verifyPluginProjectConfiguration
 
-    - name: Build plugin
-      run: ./gradlew buildPlugin
-
     - name: Verify plugin structure
       run: ./gradlew verifyPluginStructure
 
