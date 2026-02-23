@@ -1,10 +1,7 @@
-import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
-import org.jetbrains.intellij.platform.gradle.models.ProductRelease
-
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.2.21"
-    id("org.jetbrains.intellij.platform") version "2.9.0"
+    id("org.jetbrains.intellij.platform") version "2.11.0"
 }
 
 group = "de.mehtrick"
@@ -60,6 +57,8 @@ intellijPlatform {
 
         changeNotes = """
             Initial version
+            
+            1.0.3 - Dependency updates and bug fixes
         """.trimIndent()
     }
 
