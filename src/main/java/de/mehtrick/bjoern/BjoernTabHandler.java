@@ -47,8 +47,8 @@ public class BjoernTabHandler extends EditorActionHandler {
     @Override
     protected void doExecute(@NotNull Editor editor, @Nullable Caret caret, DataContext dataContext) {
         if (isInBjoernFile(editor)) {
-            int offset = caret != null ? caret.getOffset() : editor.getCaretModel().getOffset();
-            if (navigateToNextParameter(editor, offset)) {
+            Caret activeCaret = caret != null ? caret : editor.getCaretModel().getPrimaryCaret();
+            if (navigateToNextParameter(editor, activeCaret)) {
                 return;
             }
         }
@@ -74,15 +74,15 @@ public class BjoernTabHandler extends EditorActionHandler {
     }
 
     /**
-     * Finds all quoted parameter positions, locates the current one, then moves the caret
-     * to the next parameter (wrapping around). Selects non-empty content so it can be
+     * Finds all quoted parameter positions, locates the current one, then moves the given
+     * caret to the next parameter (wrapping around). Selects non-empty content so it can be
      * immediately overwritten by typing.
      *
-     * @return true if navigation was performed, false if no parameters found
+     * @return true if navigation was performed, false if caret is not inside a parameter
      */
-    static boolean navigateToNextParameter(Editor editor, int currentOffset) {
+    static boolean navigateToNextParameter(Editor editor, @NotNull Caret caret) {
         String text = editor.getDocument().getText();
-        int[] target = findNextParameter(text, currentOffset);
+        int[] target = findNextParameter(text, caret.getOffset());
         if (target == null) {
             return false;
         }
@@ -90,12 +90,12 @@ public class BjoernTabHandler extends EditorActionHandler {
         int contentStart = target[0] + 1; // position after the opening quote
         int contentEnd = target[1] - 1;   // position before the closing quote
 
-        editor.getCaretModel().moveToOffset(contentStart);
+        caret.moveToOffset(contentStart);
         if (contentEnd > contentStart) {
             // Field has content – select it so it can be easily replaced by typing
-            editor.getSelectionModel().setSelection(contentStart, contentEnd);
+            caret.setSelection(contentStart, contentEnd);
         } else {
-            editor.getSelectionModel().removeSelection();
+            caret.removeSelection();
         }
 
         return true;
