@@ -1,12 +1,8 @@
 Feature: ${NAME}
+
 Background:
   Given:
-    - 
+
 Scenarios:
   - Scenario: 
-    Given:
-      - 
-    When:
-      - 
-    Then:
-      - 
+
