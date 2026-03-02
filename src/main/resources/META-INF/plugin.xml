@@ -42,6 +42,10 @@
         <completion.contributor language="yaml"
                                implementationClass="de.mehtrick.bjoern.BjoernCompletionContributor"/>
 
+        <!-- Tab key navigation between parameter placeholders in .zgr files -->
+        <editorActionHandler action="EditorTab"
+                             implementationClass="de.mehtrick.bjoern.BjoernTabHandler"
+                             order="first"/>
         <!-- Breadcrumb navigation for Bjoern BDD files -->
         <breadcrumbsInfoProvider implementation="de.mehtrick.bjoern.BjoernBreadcrumbsProvider"/>
     </extensions>
