@@ -61,4 +61,79 @@ public class BjoernCompletionTest {
             throw new AssertionError("Expected '" + expected + "' but got '" + templateStatement + "'");
         }
     }
+
+    public void testIsInsideParameter() {
+        // Cursor between quotes -> inside parameter
+        String text = "- there are \"\" bottles";
+        int insideOffset = text.indexOf("\"\"") + 1; // between the two quotes
+        if (!BjoernTabHandler.isInsideParameter(text, insideOffset)) {
+            throw new AssertionError("Cursor between empty quotes should be considered inside a parameter");
+        }
+
+        // Cursor before the opening quote -> not inside
+        int beforeOffset = text.indexOf("\"\"");
+        if (BjoernTabHandler.isInsideParameter(text, beforeOffset)) {
+            throw new AssertionError("Cursor on opening quote should not be considered inside a parameter");
+        }
+
+        // Text with no parameters
+        if (BjoernTabHandler.isInsideParameter("no params here", 5)) {
+            throw new AssertionError("Text without parameters should return false");
+        }
+
+        // Cursor inside a filled parameter
+        String filledText = "- there are \"2\" bottles";
+        int insideFilled = filledText.indexOf("\"2\"") + 1; // on the '2'
+        if (!BjoernTabHandler.isInsideParameter(filledText, insideFilled)) {
+            throw new AssertionError("Cursor inside filled parameter should be detected");
+        }
+    }
+
+    public void testFindNextParameter() {
+        // Two empty parameters – Tab from first should return second
+        String text = "- step with \"\" and \"\" values";
+        int firstParamOffset = text.indexOf("\"\"") + 1;
+        int[] next = BjoernTabHandler.findNextParameter(text, firstParamOffset);
+        if (next == null) {
+            throw new AssertionError("Should find a next parameter");
+        }
+        int secondParamStart = text.indexOf("\"\"", text.indexOf("\"\"") + 2);
+        if (next[0] != secondParamStart) {
+            throw new AssertionError("Next parameter should be the second \"\" occurrence");
+        }
+
+        // Wrap-around: Tab from the last parameter should return the first
+        int secondParamOffset = secondParamStart + 1;
+        int[] wrapped = BjoernTabHandler.findNextParameter(text, secondParamOffset);
+        if (wrapped == null || wrapped[0] != text.indexOf("\"\"")) {
+            throw new AssertionError("Tab from last parameter should wrap to first");
+        }
+
+        // Cursor not inside any parameter -> null
+        int[] noParam = BjoernTabHandler.findNextParameter(text, 0);
+        if (noParam != null) {
+            throw new AssertionError("Cursor outside parameters should return null");
+        }
+
+        // No parameters in text -> null
+        int[] noParamText = BjoernTabHandler.findNextParameter("no params", 3);
+        if (noParamText != null) {
+            throw new AssertionError("Text without parameters should return null");
+        }
+
+        // Single parameter – Tab should wrap back to itself
+        String single = "- step with \"\" value";
+        int[] self = BjoernTabHandler.findNextParameter(single, single.indexOf("\"\"") + 1);
+        if (self == null || self[0] != single.indexOf("\"\"")) {
+            throw new AssertionError("Single parameter should wrap to itself");
+        }
+
+        // Filled parameter – next should still be found
+        String filled = "- step with \"foo\" and \"\" values";
+        int insideFoo = filled.indexOf("\"foo\"") + 1;
+        int[] afterFoo = BjoernTabHandler.findNextParameter(filled, insideFoo);
+        if (afterFoo == null || afterFoo[0] != filled.indexOf("\"\"")) {
+            throw new AssertionError("Tab from filled parameter should navigate to next parameter");
+        }
+    }
 }

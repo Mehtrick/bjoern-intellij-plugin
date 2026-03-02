@@ -41,5 +41,10 @@
         <!-- Backup completion for YAML language (since we inherit from YAML) -->
         <completion.contributor language="yaml"
                                implementationClass="de.mehtrick.bjoern.BjoernCompletionContributor"/>
+
+        <!-- Tab key navigation between parameter placeholders in .zgr files -->
+        <editorActionHandler action="EditorTab"
+                             implementationClass="de.mehtrick.bjoern.BjoernTabHandler"
+                             order="first"/>
     </extensions>
 </idea-plugin>
