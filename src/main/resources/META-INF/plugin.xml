@@ -41,5 +41,8 @@
         <!-- Backup completion for YAML language (since we inherit from YAML) -->
         <completion.contributor language="yaml"
                                implementationClass="de.mehtrick.bjoern.BjoernCompletionContributor"/>
+
+        <!-- Breadcrumb navigation for Bjoern BDD files -->
+        <breadcrumbsInfoProvider implementation="de.mehtrick.bjoern.BjoernBreadcrumbsProvider"/>
     </extensions>
 </idea-plugin>
