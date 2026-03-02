@@ -23,7 +23,8 @@ import java.util.regex.Pattern;
  */
 public class BjoernTabHandler extends EditorActionHandler {
 
-    private static final Pattern PARAMETER_PATTERN = Pattern.compile("\"[^\"]*\"");
+    // Matches a double-quoted string, allowing for backslash-escaped characters (e.g. \") inside.
+    private static final Pattern PARAMETER_PATTERN = Pattern.compile("\"([^\"\\\\]|\\\\.)*\"");
 
     private final EditorActionHandler myOriginalHandler;
 
