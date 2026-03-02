@@ -1,0 +1,8 @@
+Feature: ${NAME}
+
+Background:
+  Given:
+
+Scenarios:
+  - Scenario: 
+
