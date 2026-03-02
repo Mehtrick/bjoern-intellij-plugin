@@ -78,11 +78,18 @@ public class BjoernBreadcrumbsProvider implements BreadcrumbsProvider {
         if (e instanceof YAMLSequenceItem) {
             PsiElement value = ((YAMLSequenceItem) e).getValue();
             if (value instanceof YAMLScalar) {
-                return ((YAMLScalar) value).getTextValue().trim();
+                String scalarText = ((YAMLScalar) value).getTextValue().trim();
+                if (!scalarText.isEmpty()) {
+                    return scalarText;
+                }
+                // fall through to use PSI text / default label when scalar text is empty
             }
             String text = e.getText().trim();
             if (text.startsWith("- ")) {
-                return text.substring(2).trim();
+                text = text.substring(2).trim();
+            }
+            if (text.isEmpty()) {
+                return "(empty step)";
             }
             return text;
         }
