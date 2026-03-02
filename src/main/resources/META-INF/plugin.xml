@@ -42,4 +42,13 @@
         <completion.contributor language="yaml"
                                implementationClass="de.mehtrick.bjoern.BjoernCompletionContributor"/>
     </extensions>
+
+    <actions>
+        <action id="Bjoern.NewFile"
+                class="de.mehtrick.bjoern.BjoernCreateFileAction"
+                text="Bjoern Spec File"
+                description="Creates a new Bjoern BDD specification file">
+            <add-to-group group-id="NewGroup" anchor="after" relative-to-action="NewFile"/>
+        </action>
+    </actions>
 </idea-plugin>
