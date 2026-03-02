@@ -46,5 +46,7 @@
         <editorActionHandler action="EditorTab"
                              implementationClass="de.mehtrick.bjoern.BjoernTabHandler"
                              order="first"/>
+        <!-- Breadcrumb navigation for Bjoern BDD files -->
+        <breadcrumbsInfoProvider implementation="de.mehtrick.bjoern.BjoernBreadcrumbsProvider"/>
     </extensions>
 </idea-plugin>
