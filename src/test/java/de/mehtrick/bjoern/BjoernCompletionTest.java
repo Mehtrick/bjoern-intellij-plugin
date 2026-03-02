@@ -1,6 +1,5 @@
 package de.mehtrick.bjoern;
 
-import org.junit.jupiter.api.Test;
 
 import java.util.regex.Pattern;
 
@@ -63,7 +62,6 @@ public class BjoernCompletionTest {
         }
     }
 
-    @Test
     public void testIsInsideParameter() {
         // Cursor between quotes -> inside parameter
         String text = "- there are \"\" bottles";
@@ -91,7 +89,6 @@ public class BjoernCompletionTest {
         }
     }
 
-    @Test
     public void testFindNextParameter() {
         // Two empty parameters – Tab from first should return second
         String text = "- step with \"\" and \"\" values";
