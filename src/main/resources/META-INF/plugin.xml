@@ -48,6 +48,14 @@
                              order="first"/>
         <!-- Breadcrumb navigation for Bjoern BDD files -->
         <breadcrumbsInfoProvider implementation="de.mehtrick.bjoern.BjoernBreadcrumbsProvider"/>
+
+        <!-- Inspection: validate Reference field URL scheme -->
+        <localInspection language="Bjoern"
+                         implementationClass="de.mehtrick.bjoern.BjoernReferenceInspection"
+                         displayName="Invalid Reference URL scheme"
+                         groupName="Bjoern"
+                         enabledByDefault="true"
+                         level="WARNING"/>
     </extensions>
 
     <actions>

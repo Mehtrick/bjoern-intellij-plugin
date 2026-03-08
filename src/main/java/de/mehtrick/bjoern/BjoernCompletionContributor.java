@@ -18,7 +18,8 @@ import java.util.regex.Pattern;
 
 public class BjoernCompletionContributor extends CompletionContributor {
     private static final List<String> BDD_KEYWORDS = List.of(
-            "Feature:", "Background:", "Given:", "When:", "Then:", "Scenario:", "Scenarios:"
+            "Feature:", "Version:", "Reference:", "Changelog:",
+            "Background:", "Given:", "When:", "Then:", "Scenario:", "Scenarios:"
     );
     
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\"[^\"]*\"");

@@ -15,7 +15,8 @@ import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAtt
 public class BjoernSyntaxHighlighter extends SyntaxHighlighterBase {
     // Valid BDD keywords
     private static final Set<String> VALID_BDD_KEYWORDS = Set.of(
-            "Feature", "Background", "Given", "When", "Then", "Scenario", "Scenarios"
+            "Feature", "Background", "Given", "When", "Then", "Scenario", "Scenarios",
+            "Version", "Reference", "Changelog"
     );
     
     public static final TextAttributesKey BJOERN_KEYWORD =
