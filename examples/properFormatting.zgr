@@ -1,4 +1,6 @@
 Feature: Enhanced Formatting Example
+Version: "1.0.0"
+Reference: "[FORM-5](https://example.com/issues/FORM-5)"
 Background:
   Given:
     - A test environment is set up

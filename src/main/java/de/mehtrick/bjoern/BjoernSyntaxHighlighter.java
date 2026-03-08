@@ -2,6 +2,7 @@ package de.mehtrick.bjoern;
 
 import com.intellij.lexer.Lexer;
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors;
+import com.intellij.openapi.editor.colors.EditorColors;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.fileTypes.SyntaxHighlighterBase;
 import com.intellij.psi.tree.IElementType;
@@ -40,6 +41,10 @@ public class BjoernSyntaxHighlighter extends SyntaxHighlighterBase {
     // Comment highlighting
     public static final TextAttributesKey BJOERN_COMMENT =
             createTextAttributesKey("BJOERN_COMMENT", DefaultLanguageHighlighterColors.LINE_COMMENT);
+
+    // Valid hyperlink in Reference field: blue + underline (follows IDE hyperlink color scheme)
+    public static final TextAttributesKey BJOERN_VALID_LINK =
+            createTextAttributesKey("BJOERN_VALID_LINK", EditorColors.REFERENCE_HYPERLINK_COLOR);
 
     private static final TextAttributesKey[] KEYWORD_KEYS = new TextAttributesKey[]{BJOERN_KEYWORD};
     private static final TextAttributesKey[] INVALID_KEYWORD_KEYS = new TextAttributesKey[]{BJOERN_INVALID_KEYWORD};
