@@ -7,6 +7,9 @@ An IntelliJ IDEA plugin for [Bjoern](https://github.com/Mehtrick/bjoern) BDD spe
 - **File Type Recognition**: Recognizes `.zgr` files as Bjoern specification files with custom teal gem icon
 - **Syntax Highlighting**: Highlights BDD keywords in Bjoern files:
   - `Feature:`
+  - `Version:`
+  - `Reference:`
+  - `Changelog:`
   - `Background:`
   - `Given:`
   - `When:`
@@ -14,6 +17,7 @@ An IntelliJ IDEA plugin for [Bjoern](https://github.com/Mehtrick/bjoern) BDD spe
   - `Scenario:`
   - `Scenarios:`
 - **Keyword Validation**: Only valid BDD keywords are highlighted; others are marked as invalid
+- **Reference Inspection**: Warns when the `Reference:` field contains an invalid URL scheme (only `http://` and `https://` are allowed) or a malformed markdown link `[text](url)`
 - **Variable Highlighting**: Double-quoted strings are highlighted as variables with vibrant colors (e.g., `"john.doe"`, `"123"`)
 - **Comment Support**: Hash comments are properly highlighted with standard comment colors:
   - Full-line comments: `#This is a comment`
