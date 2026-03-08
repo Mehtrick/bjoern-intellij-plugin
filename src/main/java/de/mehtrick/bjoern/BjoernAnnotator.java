@@ -12,12 +12,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Annotator that applies blue-underline (hyperlink) formatting to valid Reference field values
- * in Bjoern spec files. A value is considered a valid link if it is:
- * <ul>
- *   <li>A bare {@code http://} or {@code https://} URL, or</li>
- *   <li>A markdown link {@code [text](http(s)://url)} with a valid URL.</li>
- * </ul>
+ * Annotator that applies blue-underline (hyperlink) formatting to Reference field values
+ * in Bjoern spec files that are valid markdown links: {@code [text](http(s)://url)}.
+ * <p>
+ * Plain text references (e.g. {@code "TICKET-123"}) and bare URLs are intentionally
+ * not highlighted — only the markdown-link format receives the visual treatment.
  */
 public class BjoernAnnotator implements Annotator {
 
@@ -41,7 +40,7 @@ public class BjoernAnnotator implements Annotator {
             return;
         }
 
-        if (isValidLink(element.getText())) {
+        if (isValidMarkdownLink(element.getText())) {
             holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
                     .range(element)
                     .textAttributes(BjoernSyntaxHighlighter.BJOERN_VALID_LINK)
@@ -49,22 +48,27 @@ public class BjoernAnnotator implements Annotator {
         }
     }
 
-    static boolean isValidLink(String rawValue) {
+    /**
+     * Returns {@code true} only when the value is a well-formed markdown link
+     * whose URL uses the {@code http://} or {@code https://} scheme.
+     * Bare URLs and plain text are intentionally excluded.
+     */
+    static boolean isValidMarkdownLink(String rawValue) {
         if (rawValue == null || rawValue.isBlank()) {
             return false;
         }
         String s = stripOuterQuotes(rawValue.trim());
 
-        if (s.contains("](")) {
-            Matcher m = MARKDOWN_LINK_PATTERN.matcher(s);
-            if (!m.matches()) {
-                return false;
-            }
-            return isAllowedUrl(m.group(2).trim());
+        // Must contain "](" to even be considered a markdown link attempt
+        if (!s.contains("](")) {
+            return false;
         }
 
-        String lower = s.toLowerCase();
-        return lower.startsWith("http://") || lower.startsWith("https://");
+        Matcher m = MARKDOWN_LINK_PATTERN.matcher(s);
+        if (!m.matches()) {
+            return false;
+        }
+        return isAllowedUrl(m.group(2).trim());
     }
 
     private static String stripOuterQuotes(String s) {

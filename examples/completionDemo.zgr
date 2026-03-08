@@ -1,6 +1,6 @@
 Feature: Test Foo
 Version: "1.0.0"
-Reference: "https://example.com/foo-spec"
+Reference: "[FOO-SPEC](https://example.com/foo-spec)"
 Background:
   Given: 
     - A Foo
