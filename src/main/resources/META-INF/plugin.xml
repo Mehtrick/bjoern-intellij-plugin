@@ -60,6 +60,20 @@
         <!-- Annotator: highlight valid Reference links with blue underline -->
         <annotator language="Bjoern"
                    implementationClass="de.mehtrick.bjoern.BjoernAnnotator"/>
+
+        <!-- Inspection: structural validation (required fields, duplicate scenarios, empty blocks) -->
+        <localInspection language="Bjoern"
+                         implementationClass="de.mehtrick.bjoern.BjoernStructureInspection"
+                         displayName="Bjoern structural validation"
+                         groupName="Bjoern"
+                         enabledByDefault="true"
+                         level="WARNING"/>
+
+        <!-- Color Settings Page -->
+        <colorSettingsPage implementation="de.mehtrick.bjoern.BjoernColorSettingsPage"/>
+
+        <!-- File Template registration (required for "New Bjoern Spec File" action) -->
+        <internalFileTemplate name="Bjoern Spec"/>
     </extensions>
 
     <actions>
