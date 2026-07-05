@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.yaml.YAMLLanguage;
 import org.jetbrains.yaml.psi.YAMLKeyValue;
+import org.jetbrains.yaml.psi.YAMLMapping;
 import org.jetbrains.yaml.psi.YAMLScalar;
 import org.jetbrains.yaml.psi.YAMLSequenceItem;
 
@@ -69,7 +70,11 @@ public class BjoernBreadcrumbsProvider implements BreadcrumbsProvider {
                 if (value instanceof YAMLScalar) {
                     String textValue = ((YAMLScalar) value).getTextValue().trim();
                     if (!textValue.isEmpty()) {
-                        return key + ": " + textValue;
+                        String label = key + ": " + textValue;
+                        if ("Scenario".equals(key) && isDeprecatedScenario(kv)) {
+                            label += " (deprecated)";
+                        }
+                        return label;
                     }
                 }
             }
@@ -100,5 +105,17 @@ public class BjoernBreadcrumbsProvider implements BreadcrumbsProvider {
     @Override
     public String getElementTooltip(@NotNull PsiElement e) {
         return getElementInfo(e);
+    }
+
+    private static boolean isDeprecatedScenario(YAMLKeyValue scenarioKV) {
+        PsiElement parent = scenarioKV.getParent();
+        if (!(parent instanceof YAMLMapping scenarioMapping)) {
+            return false;
+        }
+        YAMLKeyValue deprecatedKV = scenarioMapping.getKeyValueByKey("Deprecated");
+        if (deprecatedKV == null) {
+            return false;
+        }
+        return "true".equals(deprecatedKV.getValueText().trim());
     }
 }

@@ -24,8 +24,11 @@ import java.util.regex.Pattern;
 public class BjoernCompletionContributor extends CompletionContributor {
     private static final List<String> BDD_KEYWORDS = List.of(
             "Feature:", "Version:", "Reference:", "Changelog:",
-            "Background:", "Given:", "When:", "Then:", "Scenario:", "Scenarios:"
+            "Background:", "Given:", "When:", "Then:", "Scenario:", "Scenarios:",
+            "Deprecated:"
     );
+
+    private static final List<String> BOOLEAN_VALUES = List.of("true", "false");
     
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\"[^\"]*\"");
 
@@ -74,7 +77,16 @@ public class BjoernCompletionContributor extends CompletionContributor {
                             .withTypeText("BDD Keyword"));
                 }
             }
-            
+
+            // Provide boolean completion for Deprecated: values
+            if (isDeprecatedValueContext(element)) {
+                for (String value : BOOLEAN_VALUES) {
+                    result.addElement(LookupElementBuilder.create(value)
+                            .withBoldness(true)
+                            .withTypeText("boolean"));
+                }
+            }
+
             // Provide smart completion based on context
             if (currentContext != null) {
                 Set<String> suggestions = extractStatementsFromFile(file, currentContext);
@@ -165,6 +177,28 @@ public class BjoernCompletionContributor extends CompletionContributor {
         }
         
         return null;
+    }
+
+    private static boolean isDeprecatedValueContext(PsiElement element) {
+        YAMLKeyValue currentKeyValue = PsiTreeUtil.getParentOfType(element, YAMLKeyValue.class);
+        if (currentKeyValue == null || !"Deprecated".equals(currentKeyValue.getKeyText())) {
+            return false;
+        }
+
+        // Ensure the caret is inside the Deprecated value, not inside the key itself.
+        YAMLValue value = currentKeyValue.getValue();
+        if (value == null) {
+            return false;
+        }
+
+        PsiElement current = element;
+        while (current != null && current != currentKeyValue) {
+            if (current == value) {
+                return true;
+            }
+            current = current.getParent();
+        }
+        return false;
     }
     
     private static Set<String> extractStatementsFromFile(PsiFile file, String contextType) {
