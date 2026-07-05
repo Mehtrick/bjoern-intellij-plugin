@@ -1,4 +1,7 @@
 Feature: User Login Test
+Version: "2.1.0"
+Reference: "[AUTH-100](https://example.com/issues/AUTH-100)"
+Changelog: "Added two-factor authentication support"
 Background:
   Given:
     - A user registration system

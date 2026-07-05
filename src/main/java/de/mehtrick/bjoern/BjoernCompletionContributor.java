@@ -2,10 +2,15 @@ package de.mehtrick.bjoern;
 
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.LookupElementBuilder;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.patterns.PlatformPatterns;
 import com.intellij.patterns.StandardPatterns;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
+import com.intellij.psi.search.FileTypeIndex;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.PsiTreeUtil;
 import com.intellij.util.ProcessingContext;
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +23,8 @@ import java.util.regex.Pattern;
 
 public class BjoernCompletionContributor extends CompletionContributor {
     private static final List<String> BDD_KEYWORDS = List.of(
-            "Feature:", "Background:", "Given:", "When:", "Then:", "Scenario:", "Scenarios:"
+            "Feature:", "Version:", "Reference:", "Changelog:",
+            "Background:", "Given:", "When:", "Then:", "Scenario:", "Scenarios:"
     );
     
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\"[^\"]*\"");
@@ -50,7 +56,7 @@ public class BjoernCompletionContributor extends CompletionContributor {
                                       @NotNull CompletionResultSet result) {
             // Debug: Always try to provide completions for .zgr files
             PsiFile file = parameters.getOriginalFile();
-            if (file == null || !file.getName().endsWith(".zgr")) {
+            if (!file.getName().endsWith(".zgr")) {
                 return;
             }
             
@@ -163,33 +169,48 @@ public class BjoernCompletionContributor extends CompletionContributor {
     
     private static Set<String> extractStatementsFromFile(PsiFile file, String contextType) {
         Set<String> statements = new LinkedHashSet<>();
-        String text = file.getText();
-        
-        // Pattern to match statements under the specified context
+
+        // Collect statements from the current file first
+        collectStatements(file.getText(), contextType, statements);
+
+        // Then scan all other .zgr files in the project
+        Project project = file.getProject();
+        Collection<VirtualFile> allZgrFiles = FileTypeIndex.getFiles(
+                BjoernFileType.INSTANCE,
+                GlobalSearchScope.projectScope(project));
+
+        PsiManager psiManager = PsiManager.getInstance(project);
+        for (VirtualFile vf : allZgrFiles) {
+            if (vf.equals(file.getVirtualFile())) continue; // already done above
+            PsiFile otherFile = psiManager.findFile(vf);
+            if (otherFile != null) {
+                collectStatements(otherFile.getText(), contextType, statements);
+            }
+        }
+
+        return statements;
+    }
+
+    private static void collectStatements(String text, String contextType, Set<String> statements) {
         Pattern sectionPattern = Pattern.compile(
-            contextType + ":\\s*\n((?:\\s*-\\s*[^\n]+\n)*)", 
-            Pattern.MULTILINE
+                contextType + ":\\s*\n((?:\\s*-\\s*[^\n]+\n)*)",
+                Pattern.MULTILINE
         );
-        
+
         Matcher sectionMatcher = sectionPattern.matcher(text);
-        
+
         while (sectionMatcher.find()) {
             String section = sectionMatcher.group(1);
-            
-            // Extract individual list items
+
             Pattern itemPattern = Pattern.compile("^\\s*-\\s*(.+)$", Pattern.MULTILINE);
             Matcher itemMatcher = itemPattern.matcher(section);
-            
+
             while (itemMatcher.find()) {
                 String statement = itemMatcher.group(1).trim();
-                
                 // Replace quoted variables with empty placeholders
                 String templateStatement = VARIABLE_PATTERN.matcher(statement).replaceAll("\"\"");
-                
                 statements.add(templateStatement);
             }
         }
-        
-        return statements;
     }
 }

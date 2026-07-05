@@ -1,4 +1,6 @@
 Feature: Variable Highlighting Demo
+Version: "1.0.0"
+Reference: "TICKET-99"
 Background:
   Given:
     - A system with variable support

@@ -1,4 +1,9 @@
 Feature: Test eines KassenAutomaten
+Version: "1.0.0"
+Reference: "[TICKET-42](https://github.com/Mehtrick/bjoern/issues/42)"
+Changelog: |
+  - Initial implementation
+  - Fixed parameter parsing
 Background:
   Given:
     - Ein typ der was trinken will

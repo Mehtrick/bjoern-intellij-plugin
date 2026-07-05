@@ -1,8 +1,15 @@
 Feature: ${NAME}
-
+Version: "1.0.0"
+Reference: ""
+Changelog: ""
 Background:
   Given:
-
+    -
 Scenarios:
-  - Scenario: 
-
+  - Scenario: First scenario
+    Given:
+      -
+    When:
+      -
+    Then:
+      -
