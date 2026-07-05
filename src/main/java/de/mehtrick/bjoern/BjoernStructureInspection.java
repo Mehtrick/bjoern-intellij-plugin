@@ -2,6 +2,7 @@ package de.mehtrick.bjoern;
 
 import com.intellij.codeInspection.*;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.yaml.psi.*;
@@ -16,12 +17,15 @@ import java.util.*;
  *   <li>Required top-level fields {@code Feature:} and {@code Scenarios:} must be present.</li>
  *   <li>Duplicate scenario names within the same file are flagged as warnings.</li>
  *   <li>Empty {@code Given:}, {@code When:} or {@code Then:} blocks (no list items) are warned about.</li>
+ *   <li>{@code Deprecated:} is only allowed inside a scenario and must have the value {@code true} or {@code false}.</li>
  * </ol>
  */
 public class BjoernStructureInspection extends LocalInspectionTool {
 
     private static final Set<String> REQUIRED_TOP_LEVEL = Set.of("Feature", "Scenarios");
     private static final Set<String> BDD_STEP_KEYS = Set.of("Given", "When", "Then");
+    static final String DEPRECATED_KEY = "Deprecated";
+    private static final Set<String> VALID_DEPRECATED_VALUES = Set.of("true", "false");
 
     @Override
     public ProblemDescriptor @NotNull [] checkFile(@NotNull PsiFile file,
@@ -45,6 +49,7 @@ public class BjoernStructureInspection extends LocalInspectionTool {
             checkRequiredTopLevelFields(mapping, manager, isOnTheFly, problems, file);
             checkDuplicateScenarioNames(mapping, manager, isOnTheFly, problems);
             checkEmptyStepBlocks(mapping, manager, isOnTheFly, problems);
+            checkDeprecatedFields(mapping, manager, isOnTheFly, problems);
         }
 
         return problems.toArray(ProblemDescriptor.EMPTY_ARRAY);
@@ -182,6 +187,95 @@ public class BjoernStructureInspection extends LocalInspectionTool {
                     LocalQuickFix.EMPTY_ARRAY,
                     ProblemHighlightType.WEAK_WARNING));
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Check 4: Deprecated field placement and value
+    // -------------------------------------------------------------------------
+    private void checkDeprecatedFields(YAMLMapping mapping,
+                                       InspectionManager manager,
+                                       boolean isOnTheFly,
+                                       List<ProblemDescriptor> problems) {
+        collectDeprecatedKeyValues(mapping, manager, isOnTheFly, problems);
+    }
+
+    private void collectDeprecatedKeyValues(YAMLValue value,
+                                            InspectionManager manager,
+                                            boolean isOnTheFly,
+                                            List<ProblemDescriptor> problems) {
+        if (value instanceof YAMLMapping mapping) {
+            for (YAMLKeyValue kv : mapping.getKeyValues()) {
+                if (DEPRECATED_KEY.equals(kv.getKeyText())) {
+                    validateDeprecatedKeyValue(kv, manager, isOnTheFly, problems);
+                }
+                YAMLValue childValue = kv.getValue();
+                if (childValue instanceof YAMLMapping || childValue instanceof YAMLSequence) {
+                    collectDeprecatedKeyValues(childValue, manager, isOnTheFly, problems);
+                }
+            }
+        } else if (value instanceof YAMLSequence sequence) {
+            for (YAMLSequenceItem item : sequence.getItems()) {
+                collectDeprecatedKeyValues(item.getValue(), manager, isOnTheFly, problems);
+            }
+        }
+    }
+
+    private void validateDeprecatedKeyValue(YAMLKeyValue deprecatedKV,
+                                            InspectionManager manager,
+                                            boolean isOnTheFly,
+                                            List<ProblemDescriptor> problems) {
+        if (!isInsideScenario(deprecatedKV)) {
+            problems.add(manager.createProblemDescriptor(
+                    deprecatedKV,
+                    "'Deprecated:' is only allowed inside a scenario",
+                    isOnTheFly,
+                    LocalQuickFix.EMPTY_ARRAY,
+                    ProblemHighlightType.WARNING));
+        }
+
+        String valueText = deprecatedKV.getValueText().trim();
+        if (!VALID_DEPRECATED_VALUES.contains(valueText)) {
+            problems.add(manager.createProblemDescriptor(
+                    deprecatedKV,
+                    "'Deprecated:' value must be 'true' or 'false' but found '" + valueText + "'",
+                    isOnTheFly,
+                    LocalQuickFix.EMPTY_ARRAY,
+                    ProblemHighlightType.WARNING));
+        }
+    }
+
+    private boolean isInsideScenario(YAMLKeyValue deprecatedKV) {
+        // Deprecated: must be a direct key of a scenario mapping.
+        PsiElement parent = deprecatedKV.getParent();
+        if (!(parent instanceof YAMLMapping)) {
+            return false;
+        }
+
+        PsiElement scenarioKV = parent.getParent();
+        if (!(scenarioKV instanceof YAMLKeyValue) || !"Scenario".equals(((YAMLKeyValue) scenarioKV).getKeyText())) {
+            return false;
+        }
+
+        PsiElement sequenceItem = scenarioKV.getParent();
+        if (!(sequenceItem instanceof YAMLSequenceItem)) {
+            return false;
+        }
+
+        PsiElement sequence = sequenceItem.getParent();
+        if (!(sequence instanceof YAMLSequence)) {
+            return false;
+        }
+
+        PsiElement scenariosKV = sequence.getParent();
+        return scenariosKV instanceof YAMLKeyValue && "Scenarios".equals(((YAMLKeyValue) scenariosKV).getKeyText());
+    }
+
+    /**
+     * Returns {@code true} when the supplied value is a valid Deprecated field value
+     * ({@code true} or {@code false}). Used by tests and can be reused by other callers.
+     */
+    static boolean isValidDeprecatedValue(String value) {
+        return value != null && VALID_DEPRECATED_VALUES.contains(value.trim());
     }
 }
 
