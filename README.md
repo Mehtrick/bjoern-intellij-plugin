@@ -5,7 +5,7 @@ An IntelliJ IDEA plugin for [Bjoern](https://github.com/Mehtrick/bjoern) BDD spe
 ## Features
 
 - **File Type Recognition**: Recognizes `.zgr` files as Bjoern specification files with custom teal gem icon
-- **Syntax Highlighting**: Highlights BDD keywords in Bjoern files:
+- <a id="syntax-highlighting"></a>**Syntax Highlighting**: Highlights BDD keywords in Bjoern files:
   - `Feature:`
   - `Version:`
   - `Reference:`
@@ -18,8 +18,8 @@ An IntelliJ IDEA plugin for [Bjoern](https://github.com/Mehtrick/bjoern) BDD spe
   - `Scenario:`
   - `Scenarios:`
 - **Keyword Validation**: Only valid BDD keywords are highlighted; others are marked as invalid
-- **Reference Inspection**: Warns when the `Reference:` field contains an invalid URL scheme (only `http://` and `https://` are allowed) or a malformed markdown link `[text](url)`
-- **Deprecated Field Support**: Highlights `Deprecated:` inside scenarios, offers `true`/`false` completion, and validates placement and value via structural inspection
+- <a id="reference-inspection"></a>**Reference Inspection**: Warns when the `Reference:` field contains an invalid URL scheme (only `http://` and `https://` are allowed) or a malformed markdown link `[text](url)`
+- <a id="deprecated-field-support"></a>**Deprecated Field Support**: Highlights `Deprecated:` inside scenarios, offers `true`/`false` completion, and validates placement and value via structural inspection
 - **Variable Highlighting**: Double-quoted strings are highlighted as variables with vibrant colors (e.g., `"john.doe"`, `"123"`)
 - **Comment Support**: Hash comments are properly highlighted with standard comment colors:
   - Full-line comments: `#This is a comment`
@@ -30,9 +30,9 @@ An IntelliJ IDEA plugin for [Bjoern](https://github.com/Mehtrick/bjoern) BDD spe
   - Dynamic statement suggestions based on existing file content
   - Variable placeholders (variables in quotes are replaced with `""` for easy editing)
 - **YAML Structure Support**: Based on YAML parsing for proper structure validation
-- **Structural Inspection**: Checks required top-level fields, duplicate scenario names, empty step blocks, and `Deprecated:` declarations
-- **Breadcrumbs**: Navigate scenario and step sections; deprecated scenarios receive a label
-- **File Template**: Create a specification using **New → Bjoern Spec File**
+- <a id="structural-inspection"></a>**Structural Inspection**: Checks required top-level fields, duplicate scenario names, empty step blocks, and `Deprecated:` declarations
+- <a id="breadcrumbs"></a>**Breadcrumbs**: Navigate scenario and step sections; deprecated scenarios receive a label
+- <a id="file-template"></a>**File Template**: Create a specification using **New → Bjoern Spec File**
 
 ## About Bjoern
 
