@@ -1,8 +1,10 @@
 package de.mehtrick.bjoern;
 
+import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+
 import com.intellij.psi.tree.IElementType;
 
-public class BjoernKeywordValidationLexerTest {
+public class BjoernKeywordValidationLexerTest extends BasePlatformTestCase {
 
     public void testDeprecatedIsValidKeyword() {
         BjoernKeywordValidationLexer lexer = new BjoernKeywordValidationLexer();

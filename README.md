@@ -5,7 +5,7 @@ An IntelliJ IDEA plugin for [Bjoern](https://github.com/Mehtrick/bjoern) BDD spe
 ## Features
 
 - **File Type Recognition**: Recognizes `.zgr` files as Bjoern specification files with custom teal gem icon
-- **Syntax Highlighting**: Highlights BDD keywords in Bjoern files:
+- <a id="syntax-highlighting"></a>**Syntax Highlighting**: Highlights BDD keywords in Bjoern files:
   - `Feature:`
   - `Version:`
   - `Reference:`
@@ -18,8 +18,8 @@ An IntelliJ IDEA plugin for [Bjoern](https://github.com/Mehtrick/bjoern) BDD spe
   - `Scenario:`
   - `Scenarios:`
 - **Keyword Validation**: Only valid BDD keywords are highlighted; others are marked as invalid
-- **Reference Inspection**: Warns when the `Reference:` field contains an invalid URL scheme (only `http://` and `https://` are allowed) or a malformed markdown link `[text](url)`
-- **Deprecated Field Support**: Highlights `Deprecated:` inside scenarios, offers `true`/`false` completion, and validates placement and value via structural inspection
+- <a id="reference-inspection"></a>**Reference Inspection**: Warns when the `Reference:` field contains an invalid URL scheme (only `http://` and `https://` are allowed) or a malformed markdown link `[text](url)`
+- <a id="deprecated-field-support"></a>**Deprecated Field Support**: Highlights `Deprecated:` inside scenarios, offers `true`/`false` completion, and validates placement and value via structural inspection
 - **Variable Highlighting**: Double-quoted strings are highlighted as variables with vibrant colors (e.g., `"john.doe"`, `"123"`)
 - **Comment Support**: Hash comments are properly highlighted with standard comment colors:
   - Full-line comments: `#This is a comment`
@@ -30,7 +30,9 @@ An IntelliJ IDEA plugin for [Bjoern](https://github.com/Mehtrick/bjoern) BDD spe
   - Dynamic statement suggestions based on existing file content
   - Variable placeholders (variables in quotes are replaced with `""` for easy editing)
 - **YAML Structure Support**: Based on YAML parsing for proper structure validation
-- **IntelliJ Integration**: Seamless integration with IntelliJ IDEA and other JetBrains IDEs
+- <a id="structural-inspection"></a>**Structural Inspection**: Checks required top-level fields, duplicate scenario names, empty step blocks, and `Deprecated:` declarations
+- <a id="breadcrumbs"></a>**Breadcrumbs**: Navigate scenario and step sections; deprecated scenarios receive a label
+- <a id="file-template"></a>**File Template**: Create a specification using **New → Bjoern Spec File**
 
 ## About Bjoern
 
@@ -72,14 +74,14 @@ Variables in double quotes like `"john.doe"` and `"securePassword123"` are highl
 The plugin provides intelligent code completion:
 
 1. **BDD Keywords**: Type keywords like `Given:`, `When:`, `Then:` for quick insertion
-2. **Dynamic Statement Suggestions**: When typing under a BDD section, get suggestions based on existing statements in the same file
-3. **Variable Placeholders**: Suggestions automatically replace variables with empty quotes (`""`) for easy editing
+2. **Dynamic Statement Suggestions**: When typing under a BDD section, get suggestions from the current file and other indexed `.zgr` files in the project, grouped by Given/When/Then context
+3. **Variable Placeholders**: Suggestions replace variables with empty quotes (`""`); the caret moves to the first placeholder and Tab navigates parameters
 
 Example: In a file with `- there are "2" bottles of wine`, typing under a `Given:` section will suggest `- there are "" bottles of wine` with the cursor positioned inside the quotes.
 
 ## Installation
 
-1. Build the plugin using Gradle:
+1. Install JDK 21 for the baseline build, then use the Gradle wrapper:
    ```bash
    ./gradlew buildPlugin
    ```
@@ -87,7 +89,9 @@ Example: In a file with `- there are "2" bottles of wine`, typing under a `Given
 2. Install the plugin in IntelliJ IDEA:
    - Go to `File → Settings → Plugins`
    - Click `Install Plugin from Disk...`
-   - Select the built plugin JAR file
+   - Select the plugin ZIP from `build/distributions/`
+
+The plugin supports IntelliJ IDEA **2026.1–2026.3** (builds `261` through `263.*`) and requires the bundled `org.jetbrains.plugins.yaml` plugin. The default compilation SDK is unified IDEA 2026.1.5.1; CI exercises each supported 2026 generation. See [Requirements](#requirements) and the [compatibility investigation](docs/intellij-compatibility.md).
 
 ## Examples
 
@@ -115,7 +119,9 @@ The Bjoern plugin extends IntelliJ IDEA's core functionality through several key
 - **Formatting**: Auto-indentation rules that understand BDD structure hierarchy
 - **File Recognition**: Custom teal gem icon and proper file type association
 
-The plugin inherits from YAML parsing for structural validation while adding BDD-specific enhancements.
+`BjoernLanguage` derives from IntelliJ's YAML language. `BjoernParserDefinition` delegates parsing to YAML, and `BjoernFile` extends `YAMLFileImpl`. Highlighting uses a separate validating lexer.
+
+The IDE plugin has no direct dependency on the [Bjoern Gradle framework](https://github.com/Mehtrick/bjoern). The framework reads `.zgr` files to generate JUnit test classes, step interfaces, and documentation. This plugin supports editing those files; keyword and validation changes need to stay aligned across both projects.
 
 ### Quick Start
 
@@ -128,11 +134,22 @@ The plugin inherits from YAML parsing for structural validation while adding BDD
 
 # Run tests
 ./gradlew test
+
+# Check project configuration and packaged plugin structure
+./gradlew verifyPluginProjectConfiguration verifyPluginStructure
+
+# Check binary compatibility against the configured IDE set
+./gradlew verifyPlugin
 ```
+
+`./build.sh` runs tests, builds the installable plugin ZIP, and checks project configuration and package structure. `runIde` launches the configured development IDE in a sandbox. To test or launch another supported SDK, pass `-PplatformVersion=2026.2.5` or `-PplatformVersion=2026.3`; these targets require an installed JDK 25. Java bytecode stays at version 21 for the 2026.1 baseline.
 
 ### Testing
 
-Create `.zgr` files and verify that:
+Test sources are in `src/test/java` and use IntelliJ's `BasePlatformTestCase` fixtures with JUnit. They exercise real `.zgr` parsing, highlighting, completion, inspections, breadcrumbs, and Tab navigation, plus lexer and Reference validation cases. Gradle is configured to fail if no tests are discovered. Reports are written to `build/reports/tests/test/`. See the [testing guide](PLUGIN-DEVELOPMENT-GUIDE.md#testing-and-compatibility-checks).
+
+For manual checks, create `.zgr` files and verify that:
+
 1. They are recognized as Bjoern files with teal gem icon
 2. BDD keywords are highlighted properly
 3. Invalid keywords are marked as errors
@@ -145,9 +162,22 @@ Create `.zgr` files and verify that:
 
 ## Requirements
 
-- IntelliJ IDEA 2022.3 or later (recommended: 2023.3.7 or later)
-- Java 17 or later
-- Gradle 8.10.2 (included via wrapper)
+The checked-in build configuration is:
+
+| Setting | Value |
+| --- | --- |
+| Development SDK | Unified IntelliJ IDEA 2026.1.5.1 (`IU`) |
+| Java bytecode target | 21 |
+| Build/test toolchain | JDK 21 for 2026.1; JDK 25 for 2026.2 and 2026.3 |
+| Gradle wrapper | 9.9.1, with distribution SHA-256 verification |
+| IntelliJ Platform Gradle Plugin | 2.20.1 |
+| Declared IDE build range | `261`–`263.*` (2026.1–2026.3) |
+| CI and Plugin Verifier targets | 2026.1.5.1, 2026.2.5, 2026.3 |
+| Required IDE plugin | `org.jetbrains.plugins.yaml` |
+
+These values come from `build.gradle.kts`, `gradle/wrapper/gradle-wrapper.properties`, and `src/main/resources/META-INF/plugin.xml`. Other JetBrains products require their own verification and the YAML dependency.
+
+For the reproduced YAML compatibility issue, its correction, and Java 25 implications, read [IntelliJ compatibility investigation](docs/intellij-compatibility.md). That report distinguishes platform changes from confirmed plugin failures.
 
 ## License
 

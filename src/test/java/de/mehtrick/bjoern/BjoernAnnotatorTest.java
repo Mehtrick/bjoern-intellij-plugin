@@ -1,6 +1,8 @@
 package de.mehtrick.bjoern;
 
-public class BjoernAnnotatorTest {
+import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+
+public class BjoernAnnotatorTest extends BasePlatformTestCase {
 
     public void testMarkdownLinkHttpsIsLink() {
         if (!BjoernAnnotator.isValidMarkdownLink("\"[TICKET-123](https://example.com/TICKET-123)\"")) {

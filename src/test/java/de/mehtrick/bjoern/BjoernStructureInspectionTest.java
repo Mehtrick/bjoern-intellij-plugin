@@ -1,6 +1,8 @@
 package de.mehtrick.bjoern;
 
-public class BjoernStructureInspectionTest {
+import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+
+public class BjoernStructureInspectionTest extends BasePlatformTestCase {
 
     public void testInspectionCanBeInstantiated() {
         BjoernStructureInspection inspection = new BjoernStructureInspection();

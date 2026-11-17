@@ -1,6 +1,8 @@
 package de.mehtrick.bjoern;
 
-public class BjoernFileTypeTest {
+import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+
+public class BjoernFileTypeTest extends BasePlatformTestCase {
 
     public void testBjoernFileType() {
         // Test that .zgr files are recognized as Bjoern files

@@ -1,177 +1,44 @@
-# Copilot Instructions for Bjoern IntelliJ Plugin
+# Bjoern IntelliJ Plugin
 
-## Project Overview
+This repository provides editor support for YAML-based `.zgr` BDD specifications. The separate Bjoern Gradle framework reads the specifications and generates JUnit test classes, step interfaces, and documentation. Language changes must remain compatible across both projects.
 
-This is an IntelliJ IDEA plugin that provides language support for Bjoern BDD (Behavior-Driven Development) specification files with `.zgr` extension. The plugin includes syntax highlighting, auto-completion, formatting, and validation features specifically designed for the Bjoern BDD language.
+## Project references
 
-## Key Architecture Decisions
+- For setup, supported IDE versions and toolchains, read `README.md` and the current `build.gradle.kts`/Gradle wrapper configuration.
+- For component responsibilities, language changes, tests or publishing, read `PLUGIN-DEVELOPMENT-GUIDE.md`.
+- Before changing the supported IDE range, SDK, YAML dependency or parser/lexer integration, read `docs/intellij-compatibility.md`. It records the reproduced 2026.3 failure and cross-version solution.
+- Extension registrations and dependency declarations are in `src/main/resources/META-INF/plugin.xml`.
 
-### File Type and Language Implementation
+## Architecture constraints
 
-- **BjoernFile** extends `YAMLFileImpl` (not `PsiFileBase`) to ensure compatibility with IntelliJ's YAML breadcrumbs provider
-- **BjoernLanguage** is registered as "Bjoern" with proper MIME type associations
-- **BjoernFileType** handles `.zgr` file recognition with a teal gem icon
+- `BjoernLanguage` derives from `YAMLLanguage.INSTANCE`. `BjoernFile` extends `YAMLFileImpl` so consumers can use YAML PSI.
+- Keep a Bjoern-language root element in `BjoernParserDefinition`, and delegate its parsing to YAML’s own file element. Simply returning YAML’s file root violates the file-language assertion. Calling YAML’s legacy parser directly fails on newer syntax-based implementations.
+- Obtain the highlighting lexer through `YAMLParserDefinition.createLexer(Project)`. The old `YAMLFlexLexer` implementation is absent in 2026.3.
+- `BjoernValidatingLexer` adds keyword/parameter highlighting; parsing itself remains YAML’s responsibility.
+- Use `BJOERN_*` text-attribute names and theme-aware defaults to avoid clashes with YAML’s attributes.
+- Completion is registered for `Bjoern` and `yaml`, guarded by the `.zgr` filename. Collect statements from YAML PSI sequences in the current and other indexed project files, and preserve the Given/When/Then context.
+- Quoted statement values become empty parameter placeholders. Tab navigation must delegate unrelated actions to the original editor handler.
+- Keep formatting and Enter indentation consistent with each other and the framework’s validation rules.
 
-### Syntax Highlighting
+## Language changes
 
-- **BjoernSyntaxHighlighter** extends YAML highlighter for base functionality
-- Uses unique TextAttributesKey prefixes (`BJOERN_*`) to avoid conflicts with YAML plugin
-- **Color scheme**:
-  - Keywords (Feature, Background, Scenarios, Given, When, Then): Blue/cyan
-  - Variables in double quotes: Green/yellow highlighting
-  - Normal text: Theme-adaptive subtle colors (white in dark, black in light)
+1. Confirm syntax, scope and semantics in the framework.
+2. Update `BjoernKeywordValidationLexer` and completion keywords. Ordinary keywords reuse the existing keyword token category.
+3. Update relevant inspections, formatting/indentation, breadcrumbs, the file template and examples.
+4. Cover the observable editing behavior with fixture tests. For field placement, exercise real parsed PSI rather than testing only a string-validation helper.
 
-### Auto-completion System
+## Tests and validation
 
-- **BjoernCompletionContributor** provides dynamic completion based on file content
-- **Pattern matching**: Uses universal patterns that trigger on typing
-- **Context awareness**: Detects if user is under Background or Scenario sections
-- **Dynamic extraction**: Scans existing file content for Given/When/Then statements
-- **Variable placeholders**: Replaces quoted variables with `""` for easy editing
-- **Multi-language registration**: Registered for both "Bjoern" and "yaml" languages
+Tests extend IntelliJ’s `BasePlatformTestCase`; public `test…` methods are discovered through Gradle’s explicitly configured JUnit runner. The test task fails when no tests are discovered. Keep assertions on editor/PSI behavior; avoid private-field reflection, copied production algorithms, and constructor-only assertions as evidence of feature coverage.
 
-### Formatting and Indentation
-
-- **BjoernLineIndentProvider**: Smart line indentation when pressing Enter
-- **BjoernFormattingModelBuilder**: Document formatting (Ctrl+Alt+L) with Bjoern BDD rules
-
-#### Indentation Rules
-```
-Feature: Test                    # Column 0
-Background:                      # Column 0
-  Given:                         # 2 spaces (under Background)
-    - statement                  # 4 spaces (list item under Background Given)
-Scenarios:                       # Column 0
-  - Scenario: Name               # 2 spaces (under Scenarios)
-    Given:                       # 4 spaces (under Scenario)
-      - statement                # 6 spaces (list item under Scenario Given)
-    When:                        # 4 spaces (under Scenario)
-      - statement                # 6 spaces (list item under Scenario When)
-    Then:                        # 4 spaces (under Scenario)
-      - statement                # 6 spaces (list item under Scenario Then)
-```
-
-## Build Configuration
-
-### Modern IntelliJ Platform Setup
-- **IntelliJ Platform Gradle Plugin**: 2.0.1 (stable version for compatibility)
-- **Gradle**: 8.10.2 (latest)
-- **Java**: 17 (with explicit toolchain configuration)
-- **IntelliJ version**: 2023.3.8 (stable)
-- **Version range**: 233 to 234.* (conservative for stability)
-
-### Dependencies
-```gradle
-intellijPlatform {
-    intellijIdeaCommunity("2023.3.8")
-    bundledPlugin("org.jetbrains.plugins.yaml")
-    pluginVerifier()
-    zipSigner()
-    instrumentationTools()
-}
-```
-
-## Common Issues and Solutions
-
-### 1. ClassCastException with Breadcrumbs
-**Problem**: BjoernFile cannot be cast to YAMLFile
-**Solution**: Extend YAMLFileImpl instead of PsiFileBase
-
-### 2. TextAttributesKey Conflicts
-**Problem**: IllegalStateException about YAML_SCALAR_KEY already registered
-**Solution**: Use unique prefixes like `BJOERN_SCALAR_KEY` instead of `YAML_SCALAR_KEY`
-
-### 3. Completion Not Triggering
-**Problem**: BjoernCompletionContributor called but addCompletion never executed
-**Solution**: 
-- Use specific patterns targeting .zgr files and YAML tokens
-- Register for both "Bjoern" and "yaml" languages
-- Use universal patterns that work across contexts
-
-### 4. Registry Access During IDE Initialization
-**Problem**: Single double quotes cause registry access errors
-**Solution**: Handle unmatched quotes gracefully in BjoernDoubleQuotedStringLexer
-
-### 5. StringIndexOutOfBoundsException
-**Problem**: Index errors in completion contributor's isUnderListItem method
-**Solution**: Add proper bounds checking before substring operations
-
-### 6. Java Version Compatibility
-**Problem**: IllegalArgumentException during plugin loading
-**Solution**: Use stable plugin versions and explicit Java 17 toolchain
-
-## Testing Strategy
-
-The plugin includes comprehensive tests:
-- **BjoernFileTypeTest**: File type and language registration
-- **BjoernSyntaxHighlighterTest**: Syntax highlighting verification
-- **BjoernTokenizationTest**: Lexer and parser functionality
-- **BjoernCompletionTest**: Auto-completion features
-
-## File Structure
-
-```
-src/
-├── main/
-│   ├── java/de/mehtrick/bjoern/
-│   │   ├── BjoernFile.java                    # File implementation
-│   │   ├── BjoernFileType.java                # File type definition
-│   │   ├── BjoernLanguage.java                # Language definition
-│   │   ├── BjoernSyntaxHighlighter.java       # Syntax highlighting
-│   │   ├── BjoernCompletionContributor.java   # Auto-completion
-│   │   ├── BjoernLineIndentProvider.java      # Smart indentation
-│   │   ├── BjoernFormattingModelBuilder.java  # Document formatting
-│   │   └── lexer/                             # Lexer implementations
-│   └── resources/
-│       ├── META-INF/plugin.xml               # Plugin configuration
-│       └── icons/                            # Teal gem icon
-└── test/
-    └── java/de/mehtrick/bjoern/              # Test files
-```
-
-## Plugin Registration (plugin.xml)
-
-Key extensions registered:
-- `fileType`: Associates .zgr files with BjoernFileType
-- `lang.syntaxHighlighterFactory`: Provides syntax highlighting
-- `completion.contributor`: Enables auto-completion
-- `lang.formatter`: Document formatting support
-- `codeInsight.lineIndentProvider`: Smart line indentation
-
-## Development Guidelines
-
-### Making Changes
-1. **Minimize modifications**: Change as few lines as possible
-2. **Test compatibility**: Always test with existing YAML functionality
-3. **Error handling**: Add robust bounds checking and null safety
-4. **Pattern specificity**: Use specific patterns for completion and formatting
-5. **Theme adaptation**: Ensure colors work in both light and dark themes
-
-### Build and Test
 ```bash
-./gradlew test          # Run all tests
-./gradlew buildPlugin   # Build plugin distribution
-./gradlew runIde        # Test in development IDE
+./gradlew test
+./gradlew test -PplatformVersion=2026.2.5
+./gradlew test -PplatformVersion=2026.3
+./gradlew buildPlugin verifyPluginProjectConfiguration verifyPluginStructure
+./gradlew verifyPlugin
 ```
 
-### Debugging Tips
-- Use IntelliJ's PSI Viewer to understand file structure
-- Test completion patterns in development IDE
-- Verify lexer behavior with various input combinations
-- Check formatting rules with real Bjoern BDD files
+The default SDK uses JDK 21; the two newer test SDKs need installed JDK 25. Bytecode remains Java 21. CI runs a platform matrix and verifies the baseline artifact against explicit IDE targets. Inspect executed counts and reports before claiming compatibility; an IDE-range declaration or successful compilation alone is insufficient.
 
-## Dependencies and Compatibility
-
-- **Core dependency**: IntelliJ YAML plugin (bundled)
-- **Java requirement**: 17+ (with toolchain configuration)
-- **IDE compatibility**: 2023.3+ (tested with 2023.3.8)
-- **Platform**: Cross-platform (inherits from IntelliJ platform)
-
-## Future Enhancements
-
-Potential areas for improvement:
-- Advanced error detection and validation
-- Better integration with BDD testing frameworks
-- Enhanced variable detection and validation
-- Code folding for large scenario files
-- Integration with external Bjoern tools
+Use `./gradlew runIde -PplatformVersion=2026.3` for interactive smoke checks. The current build is Java-only; the Kotlin JVM plugin is unnecessary for Kotlin Gradle scripts.

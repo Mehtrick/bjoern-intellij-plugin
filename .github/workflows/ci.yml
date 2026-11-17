@@ -2,141 +2,64 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
-
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ide: 2026.1.5.1
+            java: 21
+          - ide: 2026.2.5
+            java: 25
+          - ide: 2026.3
+            java: 25
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v6
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Test and package for IntelliJ IDEA ${{ matrix.ide }}
+        run: ./gradlew test buildPlugin verifyPluginProjectConfiguration verifyPluginStructure -PplatformVersion=${{ matrix.ide }} --console=plain
+      - name: Upload test reports
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: test-results-${{ matrix.ide }}
+          path: |
+            build/reports/tests/test/
+            build/test-results/test/
+      - name: Upload plugin
+        uses: actions/upload-artifact@v7
+        with:
+          name: plugin-${{ matrix.ide }}
+          path: build/distributions/*.zip
 
-    - name: Set up JDK 21
-      uses: actions/setup-java@v6
-      with:
-        java-version: 21
-        distribution: 'temurin'
-
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v6
-      with:
-        cache-cleanup: 'always'
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-
-    - name: Run tests
-      run: ./gradlew test
-
-    - name: Build plugin
-      run: ./gradlew buildPlugin
-
-    - name: Upload test results
-      uses: actions/upload-artifact@v7
-      if: always()
-      with:
-        name: test-results
-        path: build/reports/tests/test/
-
-    - name: Upload workspace
-      uses: actions/upload-artifact@v7
-      with:
-        name: workspace
-        path: |
-          .gradle/
-          build/
-          !build/idea-sandbox/
-
-  verify-plugin-project-configuration:
+  verify-compatibility:
     runs-on: ubuntu-latest
-    needs: build
-
+    needs: build-and-test
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v6
-
-    - name: Set up JDK 21
-      uses: actions/setup-java@v6
-      with:
-        java-version: 21
-        distribution: 'temurin'
-
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v6
-      with:
-        cache-cleanup: 'always'
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-
-    - name: Download workspace
-      uses: actions/download-artifact@v8
-      with:
-        name: workspace
-
-    - name: Verify plugin project configuration
-      run: ./gradlew verifyPluginProjectConfiguration
-
-  verify-plugin-structure:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v6
-
-    - name: Set up JDK 21
-      uses: actions/setup-java@v6
-      with:
-        java-version: 21
-        distribution: 'temurin'
-
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v6
-      with:
-        cache-cleanup: 'always'
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-
-    - name: Download workspace
-      uses: actions/download-artifact@v8
-      with:
-        name: workspace
-
-    - name: Verify plugin structure
-      run: ./gradlew verifyPluginStructure
-
-  verify-plugin:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v6
-
-    - name: Set up JDK 21
-      uses: actions/setup-java@v6
-      with:
-        java-version: 21
-        distribution: 'temurin'
-
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v6
-      with:
-        cache-cleanup: 'always'
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-
-    - name: Download workspace
-      uses: actions/download-artifact@v8
-      with:
-        name: workspace
-
-    - name: Run plugin verifier
-      run: ./gradlew verifyPlugin
-        
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v6
+        with:
+          java-version: 21
+          distribution: temurin
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Verify the baseline artifact against all supported IDE generations
+        run: ./gradlew verifyPlugin --console=plain
+      - name: Upload compatibility reports
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: plugin-verifier
+          path: build/reports/pluginVerifier/
