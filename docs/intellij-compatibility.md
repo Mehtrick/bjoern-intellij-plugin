@@ -37,7 +37,7 @@ Class org.jetbrains.yaml.lexer.YAMLFlexLexer is referenced in
 
 A compilation attempt against the actual 2026.3 SDK independently failed on those imports. Inspection of the downloaded YAML JARs confirmed that the old class is absent. This is a concrete incompatible dependency in the 1.0.3 source, although colleagues’ exact runtime logs were not available to establish whether they encountered additional failures.
 
-**Correction:** the validating lexer obtains the classic IntelliJ `Lexer` through `new YAMLParserDefinition().createLexer(null)`. This method exists in both supported parsing generations and lets YAML adapt its new syntax lexer. The unused duplicate lexer was removed. Keyword, parameter and comment highlighting are exercised through the real lexer in tests.
+**Correction:** the validating lexer obtains the classic IntelliJ `Lexer` through `new YAMLParserDefinition().createLexer(ProjectManager.getInstance().getDefaultProject())`. This method exists in both supported parsing generations and lets YAML adapt its new syntax lexer. A real default project satisfies the project parameter contract; the no-argument factory is unavailable in the 2026.1 baseline. The unused duplicate lexer was removed. Keyword, parameter and comment highlighting are exercised through the real lexer in tests.
 
 ## Parser integration and editor regressions
 

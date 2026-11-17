@@ -70,7 +70,7 @@ bjoern-intellij-plugin/
 | `BjoernCreateFileAction` | Offer **New → Bjoern Spec File** using the internal template |
 | `BjoernColorSettingsPage` | Expose the plugin's editor color attributes |
 
-The syntax highlighter instantiates `BjoernValidatingLexer`. It obtains the base lexer through `new YAMLParserDefinition().createLexer(null)`, avoiding the implementation class removed in 2026.3. The Bjoern file element delegates `parseContents` to YAML’s own file element, retaining Bjoern language identity while supporting both the classic and new syntax parsing pipelines.
+The syntax highlighter instantiates `BjoernValidatingLexer`. It obtains the base lexer through `new YAMLParserDefinition().createLexer(ProjectManager.getInstance().getDefaultProject())`, avoiding the implementation class removed in 2026.3. The Bjoern file element delegates `parseContents` to YAML’s own file element, retaining Bjoern language identity while supporting both the classic and new syntax parsing pipelines.
 
 Completion is registered for both `Bjoern` and `yaml`, guarded by the `.zgr` filename. It determines the Given/When/Then context from PSI with a text fallback, scans the current file and other project files, and replaces quoted values with `""`. Statement extraction traverses YAML PSI sequences; a regular expression replaces quoted parameters, including escaped quotes.
 
