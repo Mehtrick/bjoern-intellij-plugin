@@ -61,12 +61,21 @@ public class BjoernColorSettingsPage implements ColorSettingsPage {
                     - A running system
                 Scenarios:
                   - Scenario: Happy path
+                    Deprecated: false
                     Given:
                       - A user with username "alice"
                     When:
                       - User logs in with password "secret"
                     Then:
                       - Dashboard is shown
+                  - Scenario: Legacy flow
+                    Deprecated: true
+                    Given:
+                      - An old feature flag
+                    When:
+                      - The flag is toggled
+                    Then:
+                      - A warning is shown
                 """;
     }
 

@@ -1,6 +1,8 @@
 package de.mehtrick.bjoern;
 
 
+import java.lang.reflect.Field;
+import java.util.List;
 import java.util.regex.Pattern;
 
 public class BjoernCompletionTest {
@@ -134,6 +136,28 @@ public class BjoernCompletionTest {
         int[] afterFoo = BjoernTabHandler.findNextParameter(filled, insideFoo);
         if (afterFoo == null || afterFoo[0] != filled.indexOf("\"\"")) {
             throw new AssertionError("Tab from filled parameter should navigate to next parameter");
+        }
+    }
+
+    public void testDeprecatedKeywordIsOffered() throws Exception {
+        Field keywordsField = BjoernCompletionContributor.class.getDeclaredField("BDD_KEYWORDS");
+        keywordsField.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<String> keywords = (List<String>) keywordsField.get(null);
+
+        if (!keywords.contains("Deprecated:")) {
+            throw new AssertionError("BDD keyword completion should include 'Deprecated:'");
+        }
+    }
+
+    public void testBooleanValuesForDeprecated() throws Exception {
+        Field booleanField = BjoernCompletionContributor.class.getDeclaredField("BOOLEAN_VALUES");
+        booleanField.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<String> values = (List<String>) booleanField.get(null);
+
+        if (!values.contains("true") || !values.contains("false")) {
+            throw new AssertionError("Deprecated value completion should include 'true' and 'false'");
         }
     }
 }

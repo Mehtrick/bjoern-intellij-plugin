@@ -7,6 +7,7 @@ Background:
     -
 Scenarios:
   - Scenario: First scenario
+    Deprecated: false
     Given:
       -
     When:

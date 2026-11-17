@@ -10,7 +10,7 @@ import java.util.Set;
 public class BjoernKeywordValidationLexer extends LexerBase {
     private static final Set<String> VALID_BDD_KEYWORDS = Set.of(
             "Feature", "Background", "Given", "When", "Then", "Scenario", "Scenarios",
-            "Version", "Reference", "Changelog"
+            "Version", "Reference", "Changelog", "Deprecated"
     );
     
     private CharSequence buffer;

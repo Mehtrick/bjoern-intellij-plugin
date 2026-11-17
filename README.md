@@ -10,6 +10,7 @@ An IntelliJ IDEA plugin for [Bjoern](https://github.com/Mehtrick/bjoern) BDD spe
   - `Version:`
   - `Reference:`
   - `Changelog:`
+  - `Deprecated:`
   - `Background:`
   - `Given:`
   - `When:`
@@ -18,6 +19,7 @@ An IntelliJ IDEA plugin for [Bjoern](https://github.com/Mehtrick/bjoern) BDD spe
   - `Scenarios:`
 - **Keyword Validation**: Only valid BDD keywords are highlighted; others are marked as invalid
 - **Reference Inspection**: Warns when the `Reference:` field contains an invalid URL scheme (only `http://` and `https://` are allowed) or a malformed markdown link `[text](url)`
+- **Deprecated Field Support**: Highlights `Deprecated:` inside scenarios, offers `true`/`false` completion, and validates placement and value via structural inspection
 - **Variable Highlighting**: Double-quoted strings are highlighted as variables with vibrant colors (e.g., `"john.doe"`, `"123"`)
 - **Comment Support**: Hash comments are properly highlighted with standard comment colors:
   - Full-line comments: `#This is a comment`
@@ -45,6 +47,7 @@ Background:
     - Initial setup step
 Scenarios:
   - Scenario: Test case name
+    Deprecated: false
     Given:
       - A user with username "john.doe"
       - Password is "securePassword123"
@@ -52,6 +55,14 @@ Scenarios:
       - User logs in with "john.doe"
     Then:
       - Login should display "Welcome!"
+  - Scenario: Legacy login flow
+    Deprecated: true
+    Given:
+      - A user with username "legacy.user"
+    When:
+      - User logs in with old API
+    Then:
+      - A deprecation warning is shown
 ```
 
 Variables in double quotes like `"john.doe"` and `"securePassword123"` are highlighted differently to distinguish them from regular text.
@@ -130,6 +141,7 @@ Create `.zgr` files and verify that:
 6. Auto-indentation works correctly
 7. Smart autocomplete provides relevant suggestions
 8. YAML structure is validated
+9. `Deprecated:` is only accepted inside scenarios with values `true` or `false`
 
 ## Requirements
 
