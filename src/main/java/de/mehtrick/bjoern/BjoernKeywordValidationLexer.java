@@ -14,7 +14,6 @@ public class BjoernKeywordValidationLexer extends LexerBase {
     );
     
     private CharSequence buffer;
-    private int startOffset;
     private int endOffset;
     private int currentPosition;
     private IElementType currentTokenType;
@@ -24,7 +23,6 @@ public class BjoernKeywordValidationLexer extends LexerBase {
     @Override
     public void start(CharSequence buffer, int startOffset, int endOffset, int initialState) {
         this.buffer = buffer;
-        this.startOffset = startOffset;
         this.endOffset = endOffset;
         this.currentPosition = startOffset;
         advance();

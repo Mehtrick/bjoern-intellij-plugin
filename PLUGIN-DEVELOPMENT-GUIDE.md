@@ -1,449 +1,189 @@
-# IntelliJ Plugin Development Guide: Understanding the Bjoern Plugin
+# Bjoern IntelliJ Plugin Development Guide
 
-This guide explains how the Bjoern IntelliJ plugin works and provides a foundation for understanding IntelliJ plugin development, even if you have no prior experience.
+This guide describes the checked-in implementation and development workflow. The [README](README.md#requirements) lists the configured SDK and tool versions. The dated [IntelliJ compatibility investigation](docs/intellij-compatibility.md) covers newer platform releases and verification limits.
 
-## Table of Contents
+## Relationship to the Bjoern framework
 
-1. [What is an IntelliJ Plugin?](#what-is-an-intellij-plugin)
-2. [Plugin Architecture Overview](#plugin-architecture-overview)
-3. [Project Structure](#project-structure)
-4. [Key Components Explained](#key-components-explained)
-5. [How the Plugin Works (Step by Step)](#how-the-plugin-works-step-by-step)
-6. [Development Environment Setup](#development-environment-setup)
-7. [Common Development Tasks](#common-development-tasks)
-8. [Build System and Testing](#build-system-and-testing)
-9. [Publishing and Distribution](#publishing-and-distribution)
-10. [Troubleshooting Common Issues](#troubleshooting-common-issues)
+The IntelliJ plugin supports editing YAML-based `.zgr` specifications. The separate [Bjoern Gradle framework](https://github.com/Mehtrick/bjoern) validates and reads those specifications, generates abstract JUnit classes and step interfaces, and produces documentation. Developers implement the generated steps in their own test classes.
 
-## What is an IntelliJ Plugin?
+There is no direct framework dependency in this IDE plugin. The specification format is their shared contract. A language change therefore needs corresponding framework parsing/generation support and IDE editing/validation support.
 
-An IntelliJ plugin is a software extension that adds new features or functionality to JetBrains IDEs (IntelliJ IDEA, PyCharm, WebStorm, etc.). Think of it like a browser extension, but for your code editor.
+## Architecture
 
-### What Our Plugin Does
+The plugin reuses IntelliJ's bundled YAML implementation:
 
-The Bjoern plugin adds support for `.zgr` files (Bjoern BDD specification files) to IntelliJ IDEA by providing:
+```text
+.zgr file
+  → BjoernFileType / BjoernLanguage (derived from YAML)
+  → BjoernParserDefinition (delegates to YAMLParserDefinition)
+  → BjoernFile (extends YAMLFileImpl)
+  → YAML PSI consumed by completion, inspections, annotator and breadcrumbs
 
-- **File Recognition**: IntelliJ recognizes `.zgr` files and shows them with a teal gem icon
-- **Syntax Highlighting**: Keywords like `Given:`, `When:`, `Then:` are colored differently
-- **Smart Completion**: Type suggestions as you write BDD scenarios
-- **Auto-Formatting**: Proper indentation when you press Enter or format the document
-- **Error Detection**: Invalid keywords are highlighted as errors
-
-## Plugin Architecture Overview
-
-IntelliJ plugins work by extending the IDE's core functionality through well-defined extension points. Here's how our plugin fits into the IDE:
-
-```
-IntelliJ IDEA Core
-├── File System
-│   └── Our Plugin: Recognizes .zgr files
-├── Editor
-│   ├── Our Plugin: Syntax highlighting
-│   ├── Our Plugin: Auto-completion
-│   └── Our Plugin: Formatting
-└── Project Model
-    └── Our Plugin: File type registration
+Editor highlighting
+  → BjoernSyntaxHighlighter
+  → BjoernValidatingLexer (layered over YAMLParserDefinition.createLexer(Project))
+  → keyword validation and double-quoted parameter tokens
 ```
 
-### Key Concepts
+PSI is IntelliJ's structured representation of a file. The parser continues to use YAML tokens; the custom highlighting lexer does not replace the YAML parser's lexer.
 
-1. **Extension Points**: Predefined places in IntelliJ where plugins can add functionality
-2. **PSI (Program Structure Interface)**: IntelliJ's way of understanding code structure
-3. **Lexer**: Breaks text into tokens (words, keywords, symbols)
-4. **Parser**: Understands the structure and meaning of tokens
-5. **Language**: A registered language type that IntelliJ can work with
+`src/main/resources/META-INF/plugin.xml` registers the extension points and declares dependencies on `com.intellij.modules.platform` and `org.jetbrains.plugins.yaml`.
 
-## Project Structure
+## Project layout
 
-```
+```text
 bjoern-intellij-plugin/
-├── build.gradle              # Build configuration
-├── src/main/
-│   ├── java/de/mehtrick/bjoern/   # Java source code
-│   │   ├── BjoernLanguage.java         # Language definition
-│   │   ├── BjoernFileType.java         # File type (.zgr recognition)
-│   │   ├── BjoernSyntaxHighlighter.java # Coloring rules
-│   │   ├── BjoernCompletionContributor.java # Auto-completion
-│   │   ├── BjoernFormattingModelBuilder.java # Document formatting
-│   │   ├── BjoernLineIndentProvider.java # Smart indentation
-│   │   └── ... (other components)
-│   └── resources/
-│       ├── META-INF/plugin.xml    # Plugin configuration
-│       └── icons/             # Plugin icons
-├── examples/                  # Sample .zgr files for testing
-└── .github/workflows/         # CI/CD automation
+├── build.gradle.kts                 # SDK, toolchains, verification and publishing
+├── settings.gradle.kts
+├── gradle.properties                # Build/configuration cache settings
+├── gradle/wrapper/                  # Gradle wrapper distribution configuration
+├── src/main/java/de/mehtrick/bjoern/ # All production classes, including lexers
+├── src/main/resources/
+│   ├── META-INF/plugin.xml
+│   ├── META-INF/pluginIcon.svg
+│   ├── icons/icon.svg
+│   ├── fileTemplates/internal/Bjoern Spec.zgr.ft
+│   └── inspectionDescriptions/
+├── src/test/java/de/mehtrick/bjoern/
+├── examples/
+├── docs/intellij-compatibility.md
+└── .github/workflows/
 ```
 
-## Key Components Explained
+## Main components
 
-### 1. Plugin Configuration (`plugin.xml`)
+| Component | Responsibility |
+| --- | --- |
+| `BjoernLanguage`, `BjoernFileType` | YAML-derived language identity, `.zgr` association, and file icon |
+| `BjoernParserDefinition`, `BjoernFile` | Keep a Bjoern file root, delegate parsing to YAML’s file element type, and reuse YAML PSI |
+| `BjoernSyntaxHighlighter`, `BjoernSyntaxHighlighterFactory` | Assign `BJOERN_*` color attributes to tokens |
+| `BjoernValidatingLexer` | Layer keyword and parameter highlighting over YAML’s lexer adapter |
+| `BjoernKeywordValidationLexer` | Classify keys using `VALID_BDD_KEYWORDS` |
+| `BjoernDoubleQuotedStringLexer` | Tokenize quoted parameters inside text |
+| `BjoernCompletionContributor` | Keyword and boolean suggestions; reuse statements from project `.zgr` files |
+| `BjoernTabHandler` | Navigate quoted parameters, delegating other cases to the original Tab handler |
+| `BjoernFormattingModelBuilder` | Wrap the YAML formatter and apply Björn indentation rules |
+| `BjoernLineIndentProvider` | Calculate indentation when entering a new line |
+| `BjoernStructureInspection` | Check required fields, duplicate scenario names, empty blocks, and `Deprecated:` |
+| `BjoernReferenceInspection`, `BjoernAnnotator` | Validate Reference values and visually highlight valid Markdown links |
+| `BjoernBreadcrumbsProvider` | Display structural sections and steps, including deprecated scenario labels |
+| `BjoernCreateFileAction` | Offer **New → Bjoern Spec File** using the internal template |
+| `BjoernColorSettingsPage` | Expose the plugin's editor color attributes |
 
-This is the "blueprint" of your plugin. It tells IntelliJ:
+The syntax highlighter instantiates `BjoernValidatingLexer`. It obtains the base lexer through `new YAMLParserDefinition().createLexer(null)`, avoiding the implementation class removed in 2026.3. The Bjoern file element delegates `parseContents` to YAML’s own file element, retaining Bjoern language identity while supporting both the classic and new syntax parsing pipelines.
 
-```xml
-<idea-plugin>
-    <id>de.mehtrick.bjoern-intellij-plugin</id>
-    <name>Bjoern Language Support</name>
-    
-    <!-- What other plugins we depend on -->
-    <depends>com.intellij.modules.platform</depends>
-    <depends>org.jetbrains.plugins.yaml</depends>
-    
-    <!-- What features we add to IntelliJ -->
-    <extensions defaultExtensionNs="com.intellij">
-        <fileType name="Bjoern File" implementationClass="...BjoernFileType"/>
-        <lang.syntaxHighlighterFactory language="Bjoern" implementationClass="..."/>
-        <!-- ... more extensions -->
-    </extensions>
-</idea-plugin>
+Completion is registered for both `Bjoern` and `yaml`, guarded by the `.zgr` filename. It determines the Given/When/Then context from PSI with a text fallback, scans the current file and other project files, and replaces quoted values with `""`. Statement extraction traverses YAML PSI sequences; a regular expression replaces quoted parameters, including escaped quotes.
+
+## Development setup
+
+Install JDK 21 for the 2026.1 baseline and JDK 25 to build/test against 2026.2 or 2026.3. Import the repository as a Gradle project. The wrapper can run on either installed JDK; the Java toolchain follows the selected platform. Gradle downloads the configured IntelliJ SDK and dependencies on the first build.
+
+```bash
+./gradlew build
+./gradlew runIde
 ```
 
-**Think of it as**: A restaurant menu that lists all the dishes (features) your plugin offers.
+The wrapper uses Gradle 9.9.1 with a pinned SHA-256 checksum. The build uses IntelliJ Platform Gradle Plugin 2.20.1 and unified IDEA 2026.1.5.1 by default. Production and test sources are Java; no Kotlin JVM plugin is needed. Compilation emits Java 21 bytecode for the oldest supported platform.
 
-### 2. Language Definition (`BjoernLanguage.java`)
+Select a supported SDK with a Gradle property:
 
-```java
-public class BjoernLanguage extends Language {
-    public static final BjoernLanguage INSTANCE = new BjoernLanguage();
-    
-    private BjoernLanguage() {
-        super("Bjoern");  // This is the language ID
-    }
-}
+```bash
+./gradlew test -PplatformVersion=2026.2.5
+./gradlew test -PplatformVersion=2026.3
+./gradlew runIde -PplatformVersion=2026.3
 ```
 
-**What it does**: Registers "Bjoern" as a programming language that IntelliJ can understand.
+The default plugin version is 1.0.4. A release build can override it with `-PpluginVersion=1.0.4`. Versions and the explicit verification matrix are configured in `build.gradle.kts`.
 
-**Think of it as**: Creating a new entry in IntelliJ's dictionary of programming languages.
+`runIde` starts a separate development IDE under `.intellijPlatform/sandbox/`. `./build.sh` delegates to the wrapper and runs tests, plugin packaging, project-configuration verification, and structure verification. Additional arguments are forwarded to Gradle.
 
-### 3. File Type (`BjoernFileType.java`)
+## Editing language support
 
-```java
-public class BjoernFileType extends LanguageFileType {
-    public static final BjoernFileType INSTANCE = new BjoernFileType();
-    
-    @Override
-    public String getDefaultExtension() {
-        return "zgr";  // Files ending in .zgr
-    }
-    
-    @Override
-    public Icon getIcon() {
-        return BjoernIcons.FILE;  // The teal gem icon
-    }
-}
+### Adding a keyword
+
+1. Confirm the field's syntax, scope, and semantics in the framework's parser/model/validators.
+2. Add its name to `VALID_BDD_KEYWORDS` in `BjoernKeywordValidationLexer` and its completion text to `BDD_KEYWORDS` in `BjoernCompletionContributor`.
+3. Update applicable inspections, formatting/indentation, breadcrumbs, color-settings examples, and the file template. Ordinary keywords reuse `VALID_KEYWORD`; a new token type is only needed for a distinct token category.
+4. Update README examples and verify behavior on parsed `.zgr` files.
+
+### Colors
+
+Edit `TextAttributesKey` definitions in `BjoernSyntaxHighlighter`. Keep the `BJOERN_*` prefix and theme-aware defaults. Verify both light and dark schemes. Reference link styling is supplied by `BjoernAnnotator`; styling alone does not implement a custom click-navigation handler.
+
+### Indentation
+
+Keep `BjoernFormattingModelBuilder` and `BjoernLineIndentProvider` aligned with the framework's validation rules:
+
+```yaml
+Feature: Example
+Version: "1.0.0"
+Reference: "[TICKET-123](https://example.com/TICKET-123)"
+Changelog: "Initial specification"
+Background:
+  Given:
+    - A shared precondition
+Scenarios:
+  - Scenario: Example scenario
+    Deprecated: false
+    Given:
+      - A user named "Ada"
+    When:
+      - The user logs in
+    Then:
+      - The greeting is "Hello Ada"
 ```
 
-**What it does**: Tells IntelliJ that `.zgr` files are Bjoern files and should show a teal gem icon.
+### File extensions
 
-**Think of it as**: Teaching IntelliJ that `.zgr` files are like `.java` files, but for the Bjoern language.
+File associations are registered through the `fileType` extension's `extensions` attribute in `plugin.xml`. `BjoernFileType.getDefaultExtension()` returns the single default extension `zgr`. Adding another association also requires reviewing `.zgr` filename guards in completion, inspections, and the annotator, plus the framework's accepted input extensions.
 
-### 4. Syntax Highlighting (`BjoernSyntaxHighlighter.java`)
+## Testing and compatibility checks
 
-This component colors different parts of your code:
+| Command | Purpose |
+| --- | --- |
+| `./gradlew test` | Invoke Gradle's test task; inspect the executed test count |
+| `./gradlew build` | Compile, check, and assemble according to the Gradle task graph |
+| `./gradlew buildPlugin` | Create the installable ZIP in `build/distributions/` |
+| `./gradlew verifyPluginProjectConfiguration` | Check SDK, JVM, and descriptor configuration |
+| `./gradlew verifyPluginStructure` | Validate packaged plugin structure |
+| `./gradlew verifyPlugin` | Run binary compatibility checks against the configured IDE set |
+| `./gradlew runIde` | Launch the development IDE for editor smoke tests |
 
-```java
-public class BjoernSyntaxHighlighter extends SyntaxHighlighterBase {
-    @Override
-    public TextAttributesKey[] getTokenHighlights(IElementType tokenType) {
-        if (tokenType == BjoernTokenTypes.KEYWORD) {
-            return KEYWORD_KEYS;  // Color keywords blue
-        } else if (tokenType == BjoernTokenTypes.VARIABLE) {
-            return VARIABLE_KEYS; // Color variables green
-        }
-        return EMPTY_KEYS;  // Default color for everything else
-    }
-}
-```
+Tests extend IntelliJ's `BasePlatformTestCase`, whose JUnit-compatible `test…` methods are discovered by Gradle's explicitly configured `useJUnit()` runner. The build includes JUnit 4 and the Platform test framework, and sets `failOnNoDiscoveredTests = true` so an empty test run cannot silently succeed.
 
-**What it does**: Decides what color each word should be (like "Given:" being blue).
+Fixture tests use real `.zgr` PSI/editor behavior for parsing, highlighting, completion across project files, Reference/structure inspections, breadcrumbs, and Tab navigation. Lexer and Reference value tests supplement those checks. Reports are written to `build/reports/tests/test/` and `build/test-results/test/`.
 
-**Think of it as**: A painter that knows which brush to use for different parts of a picture.
+Manual smoke checks should cover file recognition; valid and invalid keywords; matched and unmatched parameter quotes; comments; completion from the current and another project file; placeholder navigation; Enter and document formatting; references; breadcrumbs; file creation; and `Deprecated:` placement/value validation.
 
-### 5. Auto-completion (`BjoernCompletionContributor.java`)
+The descriptor is patched from `build.gradle.kts`: `sinceBuild = "261"` and `untilBuild = "263.*"`, covering IntelliJ IDEA 2026.1–2026.3. The lowest SDK, 2026.1.5.1, is the release compilation baseline; CI additionally recompiles and runs fixtures on 2026.2.5 and 2026.3. Plugin Verifier checks the baseline artifact against all three explicit targets, using each IDE’s bundled runtime. Binary verification must be supplemented by editor behavior tests.
 
-```java
-public class BjoernCompletionContributor extends CompletionContributor {
-    @Override
-    public void fillCompletionVariants(CompletionParameters parameters, CompletionResultSet result) {
-        // When user types, suggest relevant completions
-        result.addElement(LookupElementBuilder.create("Given:"));
-        result.addElement(LookupElementBuilder.create("When:"));
-        // ... more suggestions
-    }
-}
-```
+When investigating a newer IDE, record its exact version/build, plugin version, dependency availability, and errors from **Help → Show Log**. Check both the declared minimum and the newest stable platform. See the [compatibility investigation](docs/intellij-compatibility.md) for distribution and runtime changes.
 
-**What it does**: Provides suggestions when you start typing (like autocomplete in your phone's keyboard).
+## CI and publishing
 
-**Think of it as**: A helpful assistant that finishes your sentences.
+`.github/workflows/ci.yml` runs for pushes and pull requests to `main`. Its matrix uses JDK 21 for 2026.1.5.1 and JDK 25 for 2026.2.5/2026.3. Each entry runs tests, packages the plugin, checks configuration/structure, and uploads test reports and the archive. A separate compatibility job verifies the baseline artifact against all supported generations and uploads its reports. Gradle caching replaces the old transfer of entire build workspaces.
 
-### 6. Formatting (`BjoernFormattingModelBuilder.java` & `BjoernLineIndentProvider.java`)
+`.github/workflows/publish.yml` runs when a GitHub release is created. It accepts `1.0.4` or `v1.0.4` tags, validates the three-part numeric version, and passes the normalized version through `-PpluginVersion`. It runs tests, packaging and verification before publishing with `PUBLISH_TOKEN`, and uploads reports and archives even if a check fails.
 
-- **FormattingModelBuilder**: Handles document formatting (Ctrl+Alt+L)
-- **LineIndentProvider**: Handles smart indentation when you press Enter
+Keep `pluginConfiguration.changeNotes` current before releasing. Publishing is a separate operation from a local build.
 
-**What they do**: Make sure your code is properly indented and organized.
+For local installation, select the generated ZIP using **Settings → Plugins → Install Plugin from Disk**. Use the complete distribution archive from `build/distributions/`.
 
-**Think of it as**: An automatic organizer that keeps your desk tidy.
+## Troubleshooting
 
-## How the Plugin Works (Step by Step)
+| Symptom | Checks |
+| --- | --- |
+| Plugin fails to load after an IDE update | Inspect the IDE log and exact build, YAML dependency availability, descriptor range, and Plugin Verifier output; a broader range alone cannot fix missing APIs |
+| Java/toolchain error | Check the Gradle JVM, configured toolchain, SDK bytecode level, and wrapper compatibility; the checked-in baseline uses JDK 21 |
+| Highlighting differs from YAML parsing | Check `BjoernValidatingLexer` and token highlighting separately from `BjoernParserDefinition` |
+| Completion missing or incorrect | Check the `.zgr` guard, PSI/text context, project indexing, YAML sequence extraction, and both language registrations |
+| Formatting or Enter indentation differs | Compare both indentation implementations using the same specification |
+| No tests are discovered | The test task now fails; check fixture inheritance, test method names and filters, then inspect the reports |
 
-Let's trace what happens when you work with a `.zgr` file:
+## Primary references
 
-### 1. Opening a File
-
-1. User opens `example.zgr`
-2. IntelliJ checks file extension → finds `.zgr` 
-3. Looks up file type → finds `BjoernFileType`
-4. Shows file with teal gem icon
-5. Associates file with Bjoern language
-
-### 2. Syntax Highlighting
-
-1. IntelliJ reads file content
-2. Lexer breaks text into tokens (words)
-3. `BjoernSyntaxHighlighter` assigns colors to tokens
-4. Keywords like "Given:" become blue
-5. Variables in quotes become green
-
-### 3. Auto-completion
-
-1. User starts typing in the editor
-2. IntelliJ calls `BjoernCompletionContributor`
-3. Plugin analyzes context (are we under a "Given:" section?)
-4. Suggests relevant completions
-5. User sees dropdown with suggestions
-
-### 4. Formatting
-
-1. User presses Enter or Ctrl+Alt+L
-2. IntelliJ calls formatting providers
-3. Plugin calculates correct indentation
-4. Text is automatically indented according to BDD rules
-
-## Development Environment Setup
-
-### Prerequisites
-
-- **Java 17 or later**: The programming language used to build the plugin
-- **IntelliJ IDEA**: For development and testing
-- **Git**: For version control
-
-### Setup Steps
-
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/Mehtrick/bjoern-intellij-plugin.git
-   cd bjoern-intellij-plugin
-   ```
-
-2. **Open in IntelliJ IDEA**
-   - File → Open → Select the project folder
-   - IntelliJ will automatically detect it's a Gradle project
-
-3. **Build the Plugin**
-   ```bash
-   ./gradlew build
-   ```
-
-4. **Run/Test the Plugin**
-   ```bash
-   ./gradlew runIde
-   ```
-   This opens a new IntelliJ instance with your plugin installed.
-
-### What Each Build File Does
-
-- **`build.gradle`**: Main build configuration
-  - Defines Java version (17)
-  - Specifies IntelliJ version to build against (2023.3.8)
-  - Lists dependencies (YAML plugin)
-  - Configures plugin publishing
-
-- **`settings.gradle`**: Project settings
-- **`gradlew`**: Gradle wrapper script (ensures consistent Gradle version)
-
-## Common Development Tasks
-
-### Adding a New Keyword
-
-1. **Add token type** in `BjoernTokenTypes.java`:
-   ```java
-   IElementType NEW_KEYWORD = new IElementType("NEW_KEYWORD", BjoernLanguage.INSTANCE);
-   ```
-
-2. **Update lexer** to recognize the keyword
-3. **Add highlighting** in `BjoernSyntaxHighlighter.java`:
-   ```java
-   if (tokenType == BjoernTokenTypes.NEW_KEYWORD) {
-       return KEYWORD_KEYS;
-   }
-   ```
-
-4. **Add completion** in `BjoernCompletionContributor.java`:
-   ```java
-   result.addElement(LookupElementBuilder.create("NewKeyword:"));
-   ```
-
-### Changing Colors
-
-Modify the TextAttributesKey definitions in `BjoernSyntaxHighlighter.java`:
-
-```java
-public static final TextAttributesKey KEYWORD = TextAttributesKey.createTextAttributesKey(
-    "BJOERN_KEYWORD", 
-    DefaultLanguageHighlighterColors.KEYWORD  // Change this to different color
-);
-```
-
-### Modifying Indentation Rules
-
-Update `BjoernLineIndentProvider.java` or `BjoernFormattingModelBuilder.java`:
-
-```java
-if (isUnderBackground(document, offset)) {
-    return Indent.getSpaceIndent(2);  // Change number of spaces
-}
-```
-
-### Adding New File Extensions
-
-Modify `BjoernFileType.java`:
-
-```java
-@Override
-public String getDefaultExtension() {
-    return "zgr;bdd;spec";  // Support multiple extensions
-}
-```
-
-## Build System and Testing
-
-### Gradle Tasks
-
-- **`./gradlew build`**: Compile and build the plugin
-- **`./gradlew test`**: Run automated tests
-- **`./gradlew runIde`**: Launch IntelliJ with the plugin
-- **`./gradlew buildPlugin`**: Create distributable plugin JAR
-- **`./gradlew publishPlugin`**: Publish to JetBrains Plugin Repository
-
-### Testing the Plugin
-
-1. **Manual Testing**:
-   - Run `./gradlew runIde`
-   - Create test `.zgr` files
-   - Verify syntax highlighting, completion, formatting
-
-2. **Automated Testing**:
-   - Tests are in `src/test/`
-   - Run with `./gradlew test`
-
-3. **Example Files**:
-   - Use files in `examples/` directory
-   - Create new examples for different scenarios
-
-### CI/CD Pipeline
-
-The project uses GitHub Actions for automation:
-
-- **`ci.yml`**: Runs tests on every push/PR
-- **`publish.yml`**: Publishes plugin when creating a GitHub release
-
-## Publishing and Distribution
-
-### Local Installation
-
-1. Build the plugin: `./gradlew buildPlugin`
-2. In IntelliJ: File → Settings → Plugins → Install Plugin from Disk
-3. Select the JAR file from `build/distributions/`
-
-### JetBrains Plugin Repository
-
-1. **Prepare for publishing**:
-   - Ensure `plugin.xml` has proper description
-   - Update version in `build.gradle`
-   - Test thoroughly
-
-2. **Publish via GitHub Release**:
-   - Create a new release on GitHub
-   - Tag it with version (e.g., `v1.0.1`)
-   - GitHub Actions automatically publishes to JetBrains
-
-3. **Required Secret**:
-   - `PUBLISH_TOKEN`: Get from https://plugins.jetbrains.com/author/me/tokens
-   - Add to GitHub repository secrets
-
-## Troubleshooting Common Issues
-
-### "Plugin failed to load"
-
-**Cause**: Usually plugin.xml configuration issues
-**Solution**: 
-1. Check `plugin.xml` syntax
-2. Verify all class names are correct
-3. Ensure dependencies are properly declared
-
-### "Syntax highlighting not working"
-
-**Cause**: Lexer or highlighter issues
-**Solution**:
-1. Check if `BjoernSyntaxHighlighterFactory` is registered in `plugin.xml`
-2. Verify token types are properly defined
-3. Test lexer with simple examples
-
-### "Auto-completion not appearing"
-
-**Cause**: Completion contributor not triggering
-**Solution**:
-1. Verify `BjoernCompletionContributor` is registered for correct language
-2. Check completion patterns match your use case
-3. Add logging to debug when contributor is called
-
-### "Build fails with Java version error"
-
-**Cause**: Java version mismatch
-**Solution**:
-1. Ensure Java 17+ is installed
-2. Check `build.gradle` has correct Java version
-3. Verify JAVA_HOME environment variable
-
-### "Plugin not compatible with IntelliJ version"
-
-**Cause**: Version range too restrictive
-**Solution**:
-1. Update `sinceBuild` and `untilBuild` in `plugin.xml`
-2. Test with target IntelliJ versions
-3. Consider using broader version range
-
-## Key Learning Resources
-
-- **IntelliJ Platform SDK**: https://plugins.jetbrains.com/docs/intellij/
-- **Sample Plugins**: https://github.com/JetBrains/intellij-sdk-code-samples
-- **Plugin Development Forum**: https://intellij-support.jetbrains.com/hc/en-us/community/topics
-
-## Understanding the Code: Class by Class
-
-### Core Classes
-
-| Class | Purpose | Think of it as |
-|-------|---------|----------------|
-| `BjoernLanguage` | Registers the language | Birth certificate for the language |
-| `BjoernFileType` | File recognition | File extension handler |
-| `BjoernSyntaxHighlighter` | Colors text | Painter with color rules |
-| `BjoernCompletionContributor` | Auto-complete | Helpful typing assistant |
-| `BjoernFormattingModelBuilder` | Document formatting | Professional document formatter |
-| `BjoernLineIndentProvider` | Smart Enter key | Smart tab organizer |
-
-### Supporting Classes
-
-| Class | Purpose |
-|-------|---------|
-| `BjoernParserDefinition` | Tells IntelliJ how to parse files |
-| `BjoernFile` | Represents a .zgr file in memory |
-| `BjoernTokenTypes` | Defines different types of text elements |
-| `BjoernLayeredLexer` | Breaks text into meaningful pieces |
-| `BjoernKeywordValidationLexer` | Validates BDD keywords |
-| `BjoernDoubleQuotedStringLexer` | Handles quoted strings |
-
-This guide provides a foundation for understanding IntelliJ plugin development through the lens of a real, working plugin. Each concept builds upon the previous ones, creating a comprehensive understanding of how modern IDE extensions work.
+- [IntelliJ Platform SDK](https://plugins.jetbrains.com/docs/intellij/)
+- [IntelliJ Platform Gradle Plugin tasks](https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-tasks.html)
+- [Build number ranges and Java versions](https://plugins.jetbrains.com/docs/intellij/build-number-ranges.html)
+- [Verifying plugin compatibility](https://plugins.jetbrains.com/docs/intellij/verifying-plugin-compatibility.html)
+- [Incompatible API changes](https://plugins.jetbrains.com/docs/intellij/api-changes-list.html)

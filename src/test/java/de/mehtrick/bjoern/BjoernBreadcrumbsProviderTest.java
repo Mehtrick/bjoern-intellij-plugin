@@ -1,22 +1,29 @@
 package de.mehtrick.bjoern;
 
-public class BjoernBreadcrumbsProviderTest {
+import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import org.jetbrains.yaml.YAMLLanguage;
+import org.jetbrains.yaml.psi.YAMLKeyValue;
 
+import java.util.Arrays;
+
+public class BjoernBreadcrumbsProviderTest extends BasePlatformTestCase {
     public void testLanguagesContainYaml() {
+        assertContainsElements(Arrays.asList(new BjoernBreadcrumbsProvider().getLanguages()), YAMLLanguage.INSTANCE);
+    }
+
+    public void testDeprecatedScenarioLabel() {
+        myFixture.configureByText("checkout.zgr", """
+                Feature: Checkout
+                Scenarios:
+                  - Scenario: Old checkout
+                    Deprecated: true
+                """);
+        YAMLKeyValue scenario = PsiTreeUtil.findChildrenOfType(myFixture.getFile(), YAMLKeyValue.class).stream()
+                .filter(key -> "Scenario".equals(key.getKeyText())).findFirst().orElseThrow();
         BjoernBreadcrumbsProvider provider = new BjoernBreadcrumbsProvider();
-        com.intellij.lang.Language[] languages = provider.getLanguages();
-        if (languages == null || languages.length == 0) {
-            throw new AssertionError("Languages should not be empty");
-        }
-        boolean hasYaml = false;
-        for (com.intellij.lang.Language lang : languages) {
-            if ("YAML".equals(lang.getID())) {
-                hasYaml = true;
-                break;
-            }
-        }
-        if (!hasYaml) {
-            throw new AssertionError("Provider should handle YAML language (base of Bjoern)");
-        }
+
+        assertTrue(provider.acceptElement(scenario));
+        assertEquals("Scenario: Old checkout (deprecated)", provider.getElementInfo(scenario));
     }
 }

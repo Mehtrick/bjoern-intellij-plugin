@@ -247,16 +247,11 @@ public class BjoernStructureInspection extends LocalInspectionTool {
     private boolean isInsideScenario(YAMLKeyValue deprecatedKV) {
         // Deprecated: must be a direct key of a scenario mapping.
         PsiElement parent = deprecatedKV.getParent();
-        if (!(parent instanceof YAMLMapping)) {
+        if (!(parent instanceof YAMLMapping mapping) || mapping.getKeyValueByKey("Scenario") == null) {
             return false;
         }
 
-        PsiElement scenarioKV = parent.getParent();
-        if (!(scenarioKV instanceof YAMLKeyValue) || !"Scenario".equals(((YAMLKeyValue) scenarioKV).getKeyText())) {
-            return false;
-        }
-
-        PsiElement sequenceItem = scenarioKV.getParent();
+        PsiElement sequenceItem = parent.getParent();
         if (!(sequenceItem instanceof YAMLSequenceItem)) {
             return false;
         }

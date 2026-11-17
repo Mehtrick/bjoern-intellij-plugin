@@ -1,6 +1,8 @@
 package de.mehtrick.bjoern;
 
-public class BjoernReferenceInspectionTest {
+import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+
+public class BjoernReferenceInspectionTest extends BasePlatformTestCase {
 
     public void testValidHttpUrl() {
         if (!BjoernReferenceInspection.isValidReferenceValue("\"https://example.com/TICKET-123\"")) {

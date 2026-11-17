@@ -1,8 +1,10 @@
 package de.mehtrick.bjoern;
 
+import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+
 import com.intellij.psi.tree.IElementType;
 
-public class BjoernTokenizationTest {
+public class BjoernTokenizationTest extends BasePlatformTestCase {
 
     public void testValidatingLexerDoubleQuotedStrings() {
         // Test that the lexer can identify double-quoted strings

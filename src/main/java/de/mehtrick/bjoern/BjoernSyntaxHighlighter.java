@@ -9,17 +9,9 @@ import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.yaml.YAMLTokenTypes;
 
-import java.util.Set;
-
 import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey;
 
 public class BjoernSyntaxHighlighter extends SyntaxHighlighterBase {
-    // Valid BDD keywords
-    private static final Set<String> VALID_BDD_KEYWORDS = Set.of(
-            "Feature", "Background", "Given", "When", "Then", "Scenario", "Scenarios",
-            "Version", "Reference", "Changelog"
-    );
-    
     public static final TextAttributesKey BJOERN_KEYWORD =
             createTextAttributesKey("BJOERN_KEYWORD", DefaultLanguageHighlighterColors.KEYWORD);
     
